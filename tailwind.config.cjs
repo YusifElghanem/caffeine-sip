@@ -31,7 +31,8 @@ module.exports = {
       },
     },
     fontFamily: {
-      sans: ['var(--font-main)', '-apple-system', 'BlinkMacSystemFont'],
+      sans: ['var(--font-main)', '"Alexandria"', '-apple-system', 'BlinkMacSystemFont'],
+      script: ['"Caveat"', 'cursive'],
       primary: 'var(--font-main)',
     },
     extend: {
@@ -42,6 +43,19 @@ module.exports = {
         'auto-fill': 'repeat(auto-fill, 290px)',
       },
       colors: {
+        // Caffeine Sip Brand Colors
+        brand: {
+          orange: '#f0660c',
+          'orange-dark': '#d45504',
+          terracotta: '#9a3b12',
+          peach: '#e0926a',
+          charcoal: '#454545',
+          dark: '#1c120d',
+          ivory: '#fffff8',
+          cream: '#f7f3eb',
+          border: '#e8dfd3',
+        },
+        // Legacy support
         dark: '#1D1F1F',
         darker: '#0E0F0F',
         danger: '#AE0A0A',

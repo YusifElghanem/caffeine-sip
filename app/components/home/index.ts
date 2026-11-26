@@ -9,3 +9,11 @@ export { PhotosSlider } from './PhotosSlider';
 export { ProductsSlider } from './ProductsSlider';
 export { SliderProductsWithHeader } from './SliderProductsWithHeader';
 export { EnhancedSquareBanners } from './EnhancedSquareBanners';
+
+// Caffeine Sip Custom Components
+export { CaffeineHeroSlider } from './CaffeineHeroSlider';
+export { CaffeinePromoSlider } from './CaffeinePromoSlider';
+export { CaffeineVideoBanners } from './CaffeineVideoBanners';
+export { CaffeineVideoExperience } from './CaffeineVideoExperience';
+export { CaffeineBoxesOffer } from './CaffeineBoxesOffer';
+export { CaffeineProductGrid } from './CaffeineProductGrid';
