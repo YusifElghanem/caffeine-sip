@@ -185,7 +185,7 @@ export const CaffeineProductGrid = memo(function CaffeineProductGrid({ data }: {
   const skeleton = <ProductGridSkeleton count={perPage} />;
 
   return (
-    <section id="shop" className="scroll-mt-24 py-14 sm:py-20 bg-brand-ivory">
+    <section id="shop" className="scroll-mt-24 py-14 sm:py-20 bg-brand-cream relative" style={{ backgroundImage: 'url(https://caffeinesip.store/assets/brand-pattern.png)', backgroundSize: '520px auto', backgroundRepeat: 'repeat', opacity: 0.03 }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>

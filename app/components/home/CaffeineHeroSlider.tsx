@@ -17,6 +17,7 @@ interface CaffeineHeroSliderData {
   position?: number;
   auto_play?: boolean;
   animation_duration?: number;
+  priority?: boolean;
   [key: string]: unknown;
 }
 
@@ -60,9 +61,7 @@ function YouTubeBackground({ id }: { id: string }) {
     const onMessage = (event: MessageEvent) => {
       if (event.source !== frame.contentWindow) return;
       let data: { event?: string; info?: unknown } | null = null;
-      try {
-        data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-      } catch { return; }
+      try { data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data; } catch { return; }
       if (!data || typeof data !== 'object') return;
       heard = true;
       if (data.event === 'onError') return setState('failed');
@@ -70,11 +69,7 @@ function YouTubeBackground({ id }: { id: string }) {
       if (playerState === 1) setState('playing');
     };
     let timer: number | undefined;
-    const send = () => {
-      if (heard || tries >= 20) return window.clearInterval(timer);
-      tries += 1;
-      frame.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id, channel: 'widget' }), 'https://www.youtube-nocookie.com');
-    };
+    const send = () => { if (heard || tries >= 20) return window.clearInterval(timer); tries += 1; frame.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id, channel: 'widget' }), 'https://www.youtube-nocookie.com'); };
     const listen = () => { window.clearInterval(timer); tries = 0; send(); timer = window.setInterval(send, 500); };
     window.addEventListener('message', onMessage);
     frame.addEventListener('load', listen);
@@ -121,7 +116,7 @@ function SlideContent({ slide, isActive }: { slide: HeroSlide; isActive: boolean
   );
 }
 
-export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: CaffeineHeroSliderProps) {
+export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: { data: CaffeineHeroSliderData }) {
   const slides = data.slides || [];
   const position = data.position ?? 1;
   const hasMultipleSlides = slides.length > 1;
@@ -142,7 +137,6 @@ export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: Caf
     Promise.resolve(image.decode?.()).catch(() => undefined).then(() => setShowPoster(false));
   }, [firstImage]);
 
-  // Auto-play logic
   useEffect(() => {
     if (!hasMultipleSlides || data.auto_play === false) return;
     const interval = setInterval(() => {
@@ -157,10 +151,9 @@ export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: Caf
     <div className="caffeine-hero relative min-h-[86vh] flex items-center overflow-hidden bg-brand-dark text-brand-ivory" ref={root}>
       <div className="absolute inset-0 bg-gradient-to-l from-[#1c120d]/95 via-[#1c120d]/75 to-[#9a3b12]/45" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-transparent to-transparent" />
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 w-full">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Left Content - Static, always visible */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-right">
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-brand-orange/40 text-xs sm:text-sm font-semibold text-brand-ivory">
               <span className="w-2.5 h-2.5 rounded-full bg-brand-orange animate-ping" />
@@ -193,7 +186,6 @@ export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: Caf
             </div>
           </div>
 
-          {/* Right Side - Image/Video Slider */}
           <div className="lg:col-span-5">
             <div className="relative bg-brand-ivory/95 backdrop-blur-xl text-brand-dark rounded-[2rem] p-5 sm:p-6 border border-brand-orange/30 shadow-[0_20px_50px_-15px_rgba(28,18,13,0.14)]">
               <div className="flex items-center justify-between gap-2 mb-4">
@@ -201,7 +193,6 @@ export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: Caf
                 <span className="text-xs font-bold text-brand-terracotta bg-brand-peach/25 px-2.5 py-1 rounded-lg">متوفر للشحن الفوري</span>
               </div>
 
-              {/* Hero Media Slider */}
               <div className="relative rounded-2xl overflow-hidden bg-brand-cream aspect-[16/11] mb-4 border border-brand-border">
                 {slides.map((slide, index) => (
                   <div key={index} className={`caffeine-hero-slide absolute inset-0 transition-all duration-700 ease-out ${index === activeIndex ? 'translate-x-0 opacity-100 z-10' : index < activeIndex ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0'}`}>
@@ -216,7 +207,6 @@ export const CaffeineHeroSlider = memo(function CaffeineHeroSlider({ data }: Caf
                 ))}
               </div>
 
-              {/* Slider Indicators */}
               {hasMultipleSlides && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                   {slides.map((_, index) => (
