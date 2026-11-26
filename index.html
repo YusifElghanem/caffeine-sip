@@ -89,6 +89,7 @@
     #promo-slider {
       overflow: hidden;
       position: relative;
+      direction: ltr;
     }
     .promo-slider-track {
       display: flex;
@@ -105,12 +106,14 @@
       width: 33.333333%;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      align-items: center;
+      align-items: stretch;
+      min-height: 400px;
     }
     .slide-text-col {
       padding: 2rem 2.5rem;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       gap: 1.25rem;
       color: #fff;
     }
