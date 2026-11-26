@@ -1,0 +1,869 @@
+// ==UserScript==
+// @name         Caffeine Sip - Custom Theme Injection
+// @namespace    http://tampermonkey.net/
+// @version      1.0.0
+// @description  Injects Caffeine Sip custom theme (Hero, Video Banners, Product Grid, Cart) onto caffeinesip.store
+// @author       You
+// @match        https://caffeinesip.store/*
+// @match        https://*.caffeinesip.store/*
+// @grant        GM_addStyle
+// @grant        GM_getResourceText
+// @grant        GM_getResourceURL
+// @grant        GM_xmlhttpRequest
+// @run-at       document-start
+// @require      https://cdn.tailwindcss.com
+// ==/UserScript==
+
+(function() {
+  'use strict';
+
+  // ============================================
+  // 1. BRAND COLOR PALETTE & TAILWIND CONFIG
+  // ============================================
+  const brandStyles = `
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                orange: '#f0660c',
+                'orange-dark': '#d45504',
+                terracotta: '#9a3b12',
+                peach: '#e0926a',
+                charcoal: '#454545',
+                dark: '#1c120d',
+                ivory: '#fffff8',
+                cream: '#f7f3eb',
+                border: '#e8dfd3',
+              },
+            },
+            fontFamily: {
+              sans: ['"Alexandria"', 'sans-serif'],
+              script: ['"Caveat"', 'cursive'],
+            },
+            boxShadow: {
+              glow: '0 12px 35px -8px rgba(240, 102, 12, 0.45)',
+              elevated: '0 20px 50px -15px rgba(28, 18, 13, 0.14)',
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --brand-orange: #f0660c;
+        --brand-orange-dark: #d45504;
+        --brand-terracotta: #9a3b12;
+        --brand-peach: #e0926a;
+        --brand-charcoal: #454545;
+        --brand-dark: #1c120d;
+        --brand-ivory: #fffff8;
+        --brand-cream: #f7f3eb;
+        --brand-border: #e8dfd3;
+      }
+
+      html, body {
+        overflow-x: hidden;
+        background-color: var(--brand-ivory);
+        color: var(--brand-dark);
+        font-family: 'Alexandria', sans-serif !important;
+      }
+
+      @keyframes marqueeRTL {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(50%); }
+      }
+      .animate-marquee-rtl {
+        display: flex;
+        width: max-content;
+        animation: marqueeRTL 26s linear infinite;
+      }
+      .animate-marquee-rtl:hover { animation-play-state: paused; }
+      .animate-marquee-slow {
+        display: flex;
+        width: max-content;
+        animation: marqueeRTL 34s linear infinite;
+      }
+
+      .brand-pattern-bg {
+        background-image: url('https://caffeinesip.store/assets/brand-pattern.png');
+        background-size: 520px auto;
+        background-repeat: repeat;
+      }
+
+      @keyframes softPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(240, 102, 12, 0.45); }
+        50% { box-shadow: 0 0 0 12px rgba(240, 102, 12, 0); }
+      }
+      .cta-pulse { animation: softPulse 2.4s infinite; }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-up { animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: var(--brand-ivory); }
+      ::-webkit-scrollbar-thumb { background: var(--brand-peach); border-radius: 9999px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--brand-orange); }
+
+      /* Hide Salla default header/footer when our custom ones load */
+      .cs-hidden { display: none !important; }
+    </style>
+  `;
+
+  // ============================================
+  // 2. CATALOG DATA (from our local index.html)
+  // ============================================
+  const catalog = [
+    { id: '448705895', name: 'بوكس اثيوبيات', cat: 'boxes', badge: 'تجربة استثنائية • خصم 30%', image: 'https://cdn.files.salla.network/products/1916802350/bea46442-2d24-4b1c-94c6-1c90413d5353-original.jpeg', meta: 'بوكسات كافيين سيب • 3 محاصيل مختارة', notes: 'ثلاث تجارب من أعماق المحاصيل الإثيوبية المختارة بعناية.', oldPrice: 185, price: 129, url: 'https://caffeinesip.store/ethiopian-box/p448705895', options: ['حبوب كاملة', 'طحن فلتر V60', 'طحن إسبريسو'] },
+    { id: '1715765012', name: 'بوكس كلاسيك', cat: 'boxes', badge: 'تجربة كلاسيكية • خصم 34%', image: 'https://cdn.files.salla.network/products/1916802350/98189e41-3f01-404a-9a63-13a0fc0783f0-original.webp', meta: 'بوكسات كافيين سيب • 3 محاصيل كلاسيكية', notes: 'ثلاث تجارب لعشاق المحاصيل الكلاسيكية المتوازنة.', oldPrice: 151, price: 99, url: 'https://caffeinesip.store/classic-coffee-box/p1715765012', options: ['حبوب كاملة', 'طحن إسبريسو', 'طحن فلتر V60'] },
+    { id: '214325586', name: 'أثيوبيا قوجي', cat: '250g', badge: 'الأكثر مبيعاً 🔥', image: 'https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg', meta: 'محاصيل 250g • إثيوبيا • مجففة • 2100م', notes: 'فواكه مجففة، توت، زبيب، حلاوة وقوام ممتلئ.', oldPrice: null, price: 60, url: 'https://caffeinesip.store/أثيوبيا-قوجي/p214325586', options: ['حبوب كاملة (250g)', 'طحن فلتر V60 (250g)', 'طحن إسبريسو (250g)'] },
+    { id: '786827294', name: 'كولمبيا عنب', cat: '250g', badge: 'تجربة استثنائية 🍇', image: 'https://cdn.files.salla.network/products/1916802350/8c5bc275-c478-48c4-8d2f-eaffa773f413-original.jpeg', meta: 'محاصيل 250g • كولومبيا • إصدار خاص', notes: 'محصول فاخر بإيحاءات العنب الواضحة والحلاوة المميزة.', oldPrice: null, price: 89, url: 'https://caffeinesip.store/كولمبيا-عنب/p786827294', options: ['حبوب كاملة (250g)', 'طحن فلتر V60 (250g)', 'طحن إسبريسو (250g)'] },
+    { id: '190606224', name: 'البرازيل كندر ويفر 250g', cat: '250g', badge: 'محصول يومي مثالي', image: 'https://cdn.files.salla.network/products/1916802350/eaa71fc2-dd28-43e2-b251-0783d4380239-original.jpeg', meta: 'محاصيل 250g • البرازيل', notes: 'نكهات شوكولاتة وويفر ناعمة مثالية لمشروبات الحليب والإسبريسو.', oldPrice: null, price: 59, url: 'https://caffeinesip.store/البرازيل-كندر-ويفر-250g/p190606224', options: ['حبوب كاملة (250g)', 'طحن إسبريسو (250g)', 'طحن فلتر V60 (250g)'] },
+    { id: '263908739', name: 'اثوبيا قيدب 1kg', cat: '1kg', badge: 'عبوة 1 كيلو • شحن مجاني', image: 'https://cdn.files.salla.network/products/1916802350/d1cf20f9-3819-4073-89e8-ae16c13d841d-original.webp', meta: 'محاصيل 1kg • إثيوبيا قيدب', notes: 'عبوة اقتصادية فاخرة للمكاتب وعشاق القهوة الإثيوبية اليومية.', oldPrice: null, price: 215, url: 'https://caffeinesip.store/اثوبيا-قيدب-1kg/p263908739', options: ['حبوب كاملة (1kg)', 'طحن فلتر (1kg)', 'طحن إسبريسو (1kg)'] },
+    { id: '1362077625', name: 'اثيوبيا شاكيسو 1kg', cat: '1kg', badge: 'عبوة 1 كيلو • شحن مجاني', image: 'https://cdn.files.salla.network/products/1916802350/a5e89fab-65ca-47db-a577-20699deecfa1-original.webp', meta: 'محاصيل 1kg • إثيوبيا شاكيسو', notes: 'محصول شاكيسو الغني بالإيحاءات العطرية بحجم التوفير الكامل.', oldPrice: null, price: 215, url: 'https://caffeinesip.store/اثيوبيا-شاكيسو-1kg/p1362077625', options: ['حبوب كاملة (1kg)', 'طحن فلتر (1kg)', 'طحن إسبريسو (1kg)'] },
+    { id: '1475126343', name: 'ميزان القهوة الذكي النانو', cat: 'tools', badge: 'دقة استخلاص بلا عناء • خصم 30 ر.س', image: 'https://cdn.files.salla.network/products/1916802350/c33e116b-7b07-48da-94d6-add0633bdf6f-original.jpeg', meta: 'أدوات ومستلزمات القهوة', notes: 'ميزان قهوة نانو ذكي مع مؤقت آلي للاستخلاص، تصميم نحيف ودقة متناهية.', oldPrice: 129, price: 99, url: 'https://caffeinesip.store/smart-nano-espresso-scale/p1475126343', options: ['الإصدار القياسي'] },
+    { id: '1618652840', name: 'دوزنق كاب (Dosing Cup)', cat: 'tools', badge: 'ميزان وكوب 2 في 1 • خصم 31 ر.س', image: 'https://cdn.files.salla.network/products/1916802350/c6f05894-4927-4883-a3ec-ced87359173b-original.jpeg', meta: 'أدوات ومستلزمات القهوة', notes: 'حل ذكي 2 في 1 لجرعات الإسبريسو: ميزان رقمي وكوب توزيع مدمج.', oldPrice: 120, price: 89, url: 'https://caffeinesip.store/digital-dosing-sc/p1618652840', options: ['الإصدار القياسي'] },
+    { id: '1247840276', name: 'بخاخ القهوة الإلكتروني', cat: 'tools', badge: 'بدون تطاير أو تكتل', image: 'https://cdn.files.salla.network/products/1916802350/bad99bac-2aed-43ff-be6f-4ea4ca3f18ff-original.jpeg', meta: 'أدوات ومستلزمات القهوة • تقنية RDT', notes: 'بخاخ إلكتروني ذكي يرطب الحبوب برذاذ نانو ناعم لمنع الكهرباء الساكنة.', oldPrice: null, price: 39, url: 'https://caffeinesip.store/electric-coffee-rdt-sprayer/p1247840276', options: ['الإصدار القياسي'] },
+    { id: '580827363', name: 'سيرفر بدون مقبض', cat: 'tools', badge: 'أداة ترشيح أنيقة', image: 'https://cdn.files.salla.network/products/1916802350/876a47b4-f220-4c14-bde4-db056dca350a-original.webp', meta: 'أدوات ومستلزمات القهوة', notes: 'سيرفر زجاجي عصري بدون مقبض مثالي لتقديم القهوة المقطرة.', oldPrice: null, price: 45, url: 'https://caffeinesip.store/سيرفر-بدون-مقبض/p580827363', options: ['مقاس قياسي'] },
+    { id: '2006274486', name: 'مثبت فلتر', cat: 'tools', badge: 'تنظيم ركن القهوة', image: 'https://cdn.files.salla.network/products/1916802350/b48893d2-baa1-4603-9aae-3a28a71b41f5-original.webp', meta: 'أدوات ومستلزمات القهوة', notes: 'مثبت عملي وأنيق لفلاتر القهوة الورقية في ركن التحضير.', oldPrice: null, price: 49, url: 'https://caffeinesip.store/مثبت-فلتر/p2006274486', options: ['مقاس قياسي'] },
+    { id: '991066718', name: 'فلاتر تايمور B75', cat: 'tools', badge: 'فلاتر أصلية', image: 'https://cdn.files.salla.network/products/1916802350/e07032f2-3973-4d6b-8bf6-e4fbbbc57a73-original.webp', meta: 'فلاتر القهوة • Timemore', notes: 'فلاتر ورقية أصلية لقمع تايمور B75 لاستخلاص نظيف ومتوازن.', oldPrice: null, price: 38, url: 'https://caffeinesip.store/فلاتر-تايمور-b75/p991066718', options: ['عبوة فلاتر B75'] },
+    { id: '1518206833', name: 'فلاتر تايمور 02', cat: 'tools', badge: 'مقاس 02', image: 'https://cdn.files.salla.network/products/1916802350/88c31a81-35ad-4f0f-9fc9-14d55ea5f911-original.webp', meta: 'فلاتر القهوة • Timemore V60', notes: 'فلاتر ورقية عالية الجودة لقمع V60 مقاس 02.', oldPrice: null, price: 19, url: 'https://caffeinesip.store/فلاتر-تايمور-02/p1518206833', options: ['مقاس 02'] },
+    { id: '1193477754', name: 'فلاتر تايمور 01', cat: 'tools', badge: 'مقاس 01', image: 'https://cdn.files.salla.network/products/1916802350/9f50b4b7-f0e8-4611-90d5-2ec5399b1b10-original.webp', meta: 'فلاتر القهوة • Timemore V60', notes: 'فلاتر ورقية عالية الجودة لقمع V60 مقاس 01 للكوب الفردي.', oldPrice: null, price: 19, url: 'https://caffeinesip.store/فلاتر-تايمور-01/p1193477754', options: ['مقاس 01'] }
+  ];
+
+  // ============================================
+  // 3. STATE MANAGEMENT
+  // ============================================
+  let heroGrind = 'حبوب كاملة (250g)';
+  let currentCat = 'all';
+  let cart = [];
+  let discountPct = 0;
+  let heroSlideIdx = 0;
+  let slideIdx = 0;
+
+  // ============================================
+  // 4. UTILITY FUNCTIONS
+  // ============================================
+  function $(sel, ctx = document) { return ctx.querySelector(sel); }
+  function $$(sel, ctx = document) { return [...ctx.querySelectorAll(sel)]; }
+  function create(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
+
+  function showToast(msg) {
+    const t = $('#cs-toast');
+    if (t) {
+      $('#cs-toast-text').textContent = msg;
+      t.classList.remove('hidden'); t.classList.add('flex');
+      clearTimeout(window.csToastTimeout);
+      window.csToastTimeout = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex'); }, 2500);
+    }
+  }
+
+  // ============================================
+  // 5. CART LOGIC
+  // ============================================
+  function addToCart(id, option) {
+    const p = catalog.find(x => x.id === String(id));
+    if (!p) return;
+    const opt = option || p.options[0];
+    const existing = cart.find(c => c.id === p.id && c.option === opt);
+    if (existing) existing.qty += 1;
+    else cart.push({ id: p.id, name: p.name, price: p.price, image: p.image, option: opt, qty: 1 });
+    renderCart();
+    showToast(`تمت إضافة "${p.name}" للسلة`);
+  }
+
+  function changeQty(idx, delta) {
+    if (!cart[idx]) return;
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    renderCart();
+  }
+
+  function applyCoupon() {
+    const code = $('#cs-coupon-input')?.value?.trim()?.toUpperCase();
+    const fb = $('#cs-coupon-feedback');
+    if (!fb) return;
+    fb.classList.remove('hidden');
+    if (code === 'SIP10') {
+      discountPct = 10;
+      fb.className = 'text-xs font-bold text-emerald-700';
+      fb.textContent = '✓ تم تفعيل خصم 10% بنجاح!';
+    } else {
+      discountPct = 0;
+      fb.className = 'text-xs font-bold text-red-600';
+      fb.textContent = 'كود غير صحيح — جرّب الكود: SIP10';
+    }
+    renderCart();
+  }
+
+  function renderCart() {
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const discount = Math.round(subtotal * (discountPct / 100));
+    const afterDiscount = subtotal - discount;
+    const freeLimit = 199;
+    const shipping = count === 0 ? 0 : (afterDiscount >= freeLimit ? 0 : 24);
+    const total = afterDiscount + shipping;
+
+    $('#cs-cart-badge')?.textContent = count;
+    $('#cs-drawer-count')?.textContent = count;
+    $('#cs-subtotal-val')?.textContent = `${subtotal} ر.س`;
+    $('#cs-total-val')?.textContent = `${total} ر.س`;
+    $('#cs-shipping-val')?.textContent = count === 0 ? '—' : (shipping === 0 ? 'مجاني 🎉' : '24 ر.س');
+    const checkoutBtn = $('#cs-checkout-btn');
+    if (checkoutBtn) checkoutBtn.disabled = count === 0;
+
+    const discRow = $('#cs-discount-row');
+    if (discount > 0) {
+      discRow.classList.remove('hidden'); discRow.classList.add('flex');
+      $('#cs-discount-val')?.textContent = `-${discount} ر.س`;
+    } else {
+      discRow.classList.add('hidden'); discRow.classList.remove('flex');
+    }
+
+    const pct = Math.min(100, Math.round((afterDiscount / freeLimit) * 100));
+    $('#cs-shipping-bar')?.style.setProperty('width', `${pct}%`);
+    const shippingMsg = $('#cs-shipping-msg');
+    if (shippingMsg) {
+      shippingMsg.innerHTML = afterDiscount >= freeLimit
+        ? '🎉 ممتاز! طلبك مؤهل لـ <strong class="text-brand-orange">الشحن المجاني السريع</strong>'
+        : `أضف بقيمة <strong class="text-brand-orange">${Math.max(0, freeLimit - afterDiscount)} ر.س</strong> للحصول على شحن مجاني!`;
+    }
+
+    const container = $('#cs-cart-items');
+    if (!container) return;
+    if (cart.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-14 space-y-3">
+          <div class="text-4xl">☕</div>
+          <h4 class="font-extrabold text-brand-dark">سلتك بانتظار أول محصول!</h4>
+          <p class="text-xs text-brand-charcoal">استخدم كود <strong class="text-brand-orange" dir="ltr">SIP10</strong> لخصم 10% إضافي على طلبك.</p>
+        </div>
+      `;
+      return;
+    }
+    container.innerHTML = cart.map((item, idx) => `
+      <div class="bg-white rounded-2xl border border-brand-border p-3.5 flex gap-3 items-center shadow-sm">
+        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-xl object-cover border border-brand-border shrink-0" />
+        <div class="flex-1 min-w-0">
+          <h4 class="font-extrabold text-xs sm:text-sm text-brand-dark truncate">${item.name}</h4>
+          <p class="text-[11px] text-brand-charcoal/80">${item.option}</p>
+          <div class="flex items-center justify-between mt-2">
+            <div class="inline-flex items-center border border-brand-border rounded-lg bg-brand-cream">
+              <button type="button" onclick="window.csChangeQty(${idx}, 1)" class="w-7 h-7 font-bold hover:text-brand-orange cursor-pointer">+</button>
+              <span class="w-6 text-center text-xs font-extrabold">${item.qty}</span>
+              <button type="button" onclick="window.csChangeQty(${idx}, -1)" class="w-7 h-7 font-bold hover:text-brand-orange cursor-pointer">-</button>
+            </div>
+            <span class="font-black text-sm text-brand-orange">${item.price * item.qty} ر.س</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openCart() {
+    $('#cs-cart-overlay')?.classList.remove('hidden');
+    requestAnimationFrame(() => $('#cs-cart-drawer')?.classList.remove('-translate-x-full'));
+  }
+
+  function closeCart() {
+    $('#cs-cart-drawer')?.classList.add('-translate-x-full');
+    setTimeout(() => $('#cs-cart-overlay')?.classList.add('hidden'), 280);
+  }
+
+  function quickBuyProduct(id) {
+    const p = catalog.find(x => x.id === String(id));
+    if (p) { addToCart(p.id, p.options[0]); openCart(); }
+  }
+
+  function addFromCard(id) {
+    const opt = $(`#cs-opt-${id}`)?.value;
+    addToCart(id, opt);
+  }
+
+  function quickBuyFromCard(id) {
+    const opt = $(`#cs-opt-${id}`)?.value;
+    addToCart(id, opt);
+    openCart();
+  }
+
+  function completeOrder() {
+    if (cart.length === 0) return;
+    const orderNo = Math.floor(10000 + Math.random() * 90000);
+    const totalTxt = $('#cs-total-val')?.textContent;
+    cart = []; discountPct = 0;
+    renderCart();
+    const container = $('#cs-cart-items');
+    if (container) {
+      container.innerHTML = `
+        <div class="text-center py-10 px-4 space-y-4 animate-fade-up">
+          <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl font-black">✓</div>
+          <h4 class="text-xl font-black text-brand-dark">تم تأكيد طلبك التجريبي بنجاح!</h4>
+          <p class="text-sm text-brand-charcoal">
+            رقم الطلب: <strong dir="ltr" class="text-brand-dark">#CS-${orderNo}</strong><br/>
+            الإجمالي: <strong class="text-brand-orange">${totalTxt}</strong>
+          </p>
+          <a href="https://caffeinesip.store/" target="_blank" rel="noopener" class="inline-block w-full py-2.5 rounded-xl bg-brand-orange text-white text-xs font-bold hover:bg-brand-orange-dark transition-colors">
+            الانتقال لمتجر كافيين سيب الرسمي ↗
+          </a>
+          <button type="button" onclick="window.csCloseCart()" class="px-6 py-2 rounded-xl bg-brand-cream text-brand-dark text-xs font-bold hover:bg-brand-border transition-colors cursor-pointer">
+            متابعة التصفح
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  // Expose to global for inline handlers
+  window.csChangeQty = changeQty;
+  window.csCloseCart = closeCart;
+  window.csQuickBuyProduct = quickBuyProduct;
+  window.csAddFromCard = addFromCard;
+  window.csQuickBuyFromCard = quickBuyFromCard;
+  window.csCompleteOrder = completeOrder;
+  window.csApplyCoupon = applyCoupon;
+  window.csOpenCart = openCart;
+  window.csAddToCart = addToCart;
+
+  // ============================================
+  // 6. VIDEO MODAL
+  // ============================================
+  function openVideoModal(src, title) {
+    $('#cs-video-modal-title')?.textContent = title;
+    const player = $('#cs-modal-video-player');
+    if (player) { player.src = src; }
+    $('#cs-video-modal')?.classList.remove('hidden');
+    $('#cs-video-modal')?.classList.add('flex');
+    player?.play?.().catch(() => {});
+  }
+
+  function closeVideoModal() {
+    const player = $('#cs-modal-video-player');
+    player?.pause();
+    player?.removeAttribute('src');
+    $('#cs-video-modal')?.classList.add('hidden');
+    $('#cs-video-modal')?.classList.remove('flex');
+  }
+
+  window.csOpenVideoModal = openVideoModal;
+  window.csCloseVideoModal = closeVideoModal;
+
+  // ============================================
+  // 7. HERO SLIDER (Image ↔ Video)
+  // ============================================
+  function showHeroSlide(n) {
+    const slides = $$('.cs-hero-media-slide');
+    const dots = $$('.cs-hero-slide-dot');
+    heroSlideIdx = (n + slides.length) % slides.length;
+    slides.forEach((s, i) => {
+      if (i === heroSlideIdx) { s.style.transform = 'translateX(0%)'; s.style.opacity = '1'; }
+      else if (i < heroSlideIdx) { s.style.transform = 'translateX(-100%)'; s.style.opacity = '0'; }
+      else { s.style.transform = 'translateX(100%)'; s.style.opacity = '0'; }
+    });
+    dots.forEach((d, i) => {
+      d.className = i === heroSlideIdx
+        ? 'cs-hero-slide-dot w-2.5 h-2.5 rounded-full bg-brand-orange transition-all cursor-pointer'
+        : 'cs-hero-slide-dot w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white transition-all cursor-pointer';
+    });
+  }
+
+  window.csShowHeroSlide = showHeroSlide;
+
+  // ============================================
+  // 8. PROMO SLIDER
+  // ============================================
+  function showSlide(n) {
+    const slides = $$('.cs-promo-slide');
+    const dots = $$('.cs-slider-dot');
+    slideIdx = (n + slides.length) % slides.length;
+    slides.forEach((s, i) => s.classList.toggle('hidden', i !== slideIdx));
+    dots.forEach((d, i) => {
+      d.className = i === slideIdx
+        ? 'cs-slider-dot h-2.5 w-8 rounded-full bg-brand-orange transition-all cursor-pointer'
+        : 'cs-slider-dot h-2.5 w-2.5 rounded-full bg-white/40 hover:bg-white transition-all cursor-pointer';
+    });
+  }
+
+  function nextSlide() { showSlide(slideIdx + 1); }
+  function prevSlide() { showSlide(slideIdx - 1); }
+  function goToSlide(n) { showSlide(n); }
+
+  window.csNextSlide = nextSlide;
+  window.csPrevSlide = prevSlide;
+  window.csGoToSlide = goToSlide;
+
+  // ============================================
+  // 9. SHOP FILTER & GRID
+  // ============================================
+  function filterTo(cat) {
+    currentCat = cat;
+    $$('.cs-shop-filter').forEach(b => {
+      const active = b.dataset.cat === cat;
+      b.className = active
+        ? 'cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-dark text-white cursor-pointer transition-all'
+        : 'cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-brand-charcoal border border-brand-border hover:border-brand-orange cursor-pointer transition-all';
+    });
+    renderShop();
+  }
+
+  function renderShop() {
+    const grid = $('#cs-shop-grid');
+    if (!grid) return;
+    const items = catalog.filter(p => currentCat === 'all' || p.cat === currentCat);
+
+    const videoBanners = [
+      { video: 'https://assets.mixkit.co/videos/3572/3572-720.mp4', title: 'كبس وتحضير الإسبريسو بدقة احترافية', poster: 'https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg', cta: { id: '1475126343', text: 'أضف ميزان النانو — 99 ر.س' } },
+      { video: 'https://assets.mixkit.co/videos/236/236-720.mp4', title: 'ترشيح أثيوبيا قوجي — وضوح الفواكه والتوت', poster: 'https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg', cta: { id: '214325586', text: 'أضف أثيوبيا قوجي — 60 ر.س' } },
+      { video: 'https://assets.mixkit.co/videos/41858/41858-720.mp4', title: 'مشروبات الحليب مع البرازيل كندر ويفر', poster: 'https://cdn.files.salla.network/products/1916802350/eaa71fc2-dd28-43e2-b251-0783d4380239-original.jpeg', cta: { id: '190606224', text: 'أضف البرازيل كندر ويفر — 59 ر.س' } }
+    ];
+
+    let html = '';
+    items.forEach((p, index) => {
+      html += `
+        <article class="bg-white rounded-3xl border border-brand-border overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-elevated hover:border-brand-orange/50 transition-all duration-300 animate-fade-up">
+          <div>
+            <div class="relative aspect-[16/11] bg-brand-cream overflow-hidden group">
+              <img src="${p.image}" alt="${p.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <span class="absolute top-3 right-3 px-3 py-1 rounded-full bg-brand-dark/90 text-white text-[11px] font-extrabold backdrop-blur-sm">${p.badge}</span>
+            </div>
+            <div class="p-5 space-y-2">
+              <div class="text-[11px] font-semibold text-brand-charcoal/70">${p.meta}</div>
+              <h3 class="text-lg font-extrabold text-brand-dark leading-snug">${p.name}</h3>
+              <p class="text-xs text-brand-terracotta font-semibold leading-relaxed">${p.notes}</p>
+            </div>
+          </div>
+          <div class="px-5 pb-5 space-y-3">
+            ${p.options.length > 1 ? `
+              <select id="cs-opt-${p.id}" class="w-full bg-brand-cream border border-brand-border rounded-xl px-3 py-2 text-xs font-bold text-brand-dark focus:outline-none focus:border-brand-orange cursor-pointer">
+                ${p.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+              </select>
+            ` : `<input type="hidden" id="cs-opt-${p.id}" value="${p.options[0]}" />`}
+            <div class="flex items-center justify-between pt-1">
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-black text-brand-orange">${p.price} <span class="text-xs font-bold text-brand-dark">ر.س</span></span>
+                ${p.oldPrice ? `<span class="text-xs text-brand-charcoal/50 line-through">${p.oldPrice} ر.س</span>` : ''}
+              </div>
+              ${p.oldPrice ? `
+                <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">وفر ${p.oldPrice - p.price} ر.س</span>
+              ` : `<a href="${p.url}" target="_blank" rel="noopener" class="text-[11px] font-bold text-brand-charcoal/70 hover:text-brand-orange">عرض بالمتجر ↗</a>`}
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="window.csAddFromCard('${p.id}')" class="py-2.5 rounded-xl border border-brand-dark text-brand-dark hover:bg-brand-cream font-bold text-xs transition-colors cursor-pointer">أضف للسلة</button>
+              <button type="button" onclick="window.csQuickBuyFromCard('${p.id}')" class="py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-xs shadow-sm transition-colors cursor-pointer">شراء سريع ⚡</button>
+            </div>
+          </div>
+        </article>
+      `;
+
+      if ((index + 1) % 4 === 0 && index < items.length - 1) {
+        const banner = videoBanners[Math.floor(index / 4) % videoBanners.length];
+        html += `
+          <div class="col-span-full" style="grid-column: 1 / -1;">
+            <div class="relative rounded-3xl overflow-hidden bg-black border border-brand-orange/30 shadow-2xl aspect-video md:aspect-[16/5] cursor-pointer" onclick="window.csOpenVideoModal('${banner.video}', '${banner.title}')">
+              <video class="w-full h-full object-cover" autoplay muted loop playsinline poster="${banner.poster}"><source src="${banner.video}" type="video/mp4" /></video>
+              <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d]/95 via-[#1c120d]/40 to-transparent"></div>
+              <div class="absolute bottom-0 inset-x-0 p-6 sm:p-8 text-white">
+                <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div><h3 class="text-xl sm:text-2xl font-extrabold text-white">${banner.title}</h3></div>
+                  <button type="button" onclick="event.stopPropagation(); window.csAddToCart('${banner.cta.id}')" class="whitespace-nowrap py-3 px-6 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm transition-colors cursor-pointer shadow-glow">${banner.cta.text}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    });
+    grid.innerHTML = html;
+  }
+
+  window.csFilterTo = filterTo;
+  window.csRenderShop = renderShop;
+
+  // ============================================
+  // 10. COUNTDOWN TIMER
+  // ============================================
+  function startCountdown() {
+    let remainingSec = 3 * 3600 + 44 * 60 + 59;
+    const timerEl = $('#cs-countdown-timer');
+    if (!timerEl) return;
+    setInterval(() => {
+      if (remainingSec > 0) remainingSec--;
+      const h = String(Math.floor(remainingSec / 3600)).padStart(2, '0');
+      const m = String(Math.floor((remainingSec % 3600) / 60)).padStart(2, '0');
+      const s = String(remainingSec % 60).padStart(2, '0');
+      timerEl.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+  }
+
+  // ============================================
+  // 11. HERO GRIND SELECTION
+  // ============================================
+  function selectHeroGrind(btn, val) {
+    heroGrind = `${val} (250g)`;
+    $$('.cs-hero-grind-btn').forEach(b => {
+      b.className = 'cs-hero-grind-btn py-2 rounded-xl border border-brand-border bg-white text-brand-charcoal font-semibold hover:border-brand-orange cursor-pointer';
+    });
+    btn.className = 'cs-hero-grind-btn py-2 rounded-xl border-2 border-brand-orange bg-brand-orange/10 text-brand-terracotta font-bold cursor-pointer';
+  }
+
+  function addHeroProductToCart() {
+    addToCart('214325586', heroGrind);
+    openCart();
+  }
+
+  window.csSelectHeroGrind = selectHeroGrind;
+  window.csAddHeroProductToCart = addHeroProductToCart;
+
+  // ============================================
+  // 12. MAIN HTML INJECTION
+  // ============================================
+  function injectCustomTheme() {
+    // Inject styles first
+    document.head.insertAdjacentHTML('beforeend', brandStyles);
+
+    // Hide Salla default content
+    const mainContent = $('#main-content') || $('main') || $('#content') || document.body;
+    if (mainContent) mainContent.classList.add('cs-hidden');
+
+    // Create our custom wrapper
+    const wrapper = create(`
+      <div id="cs-custom-theme" class="bg-brand-ivory text-brand-dark antialiased selection:bg-brand-orange selection:text-white overflow-x-hidden min-h-screen">
+        <!-- 1. TOP ANIMATED URGENCY BANNER -->
+        <div class="bg-brand-dark text-brand-ivory border-b border-brand-orange/30 overflow-hidden py-2.5 relative z-50">
+          <div class="animate-marquee-rtl gap-10 text-xs sm:text-sm font-medium whitespace-nowrap">
+            <div class="flex items-center gap-10 px-4">
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🔥 خصم فوري على <strong class="text-brand-orange">بوكس كلاسيك (99 ر.س)</strong> و <strong class="text-brand-orange">بوكس اثيوبيات (129 ر.س)</strong></span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⚡ كود خصم إضافي 10% في السلة: <span class="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-bold" dir="ltr">SIP10</span></span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🚚 شحن سريع ومبرد للطلبات فوق <strong class="text-white">199 ر.س مجاناً</strong></span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⭐ محاصيل مختصة من أفضل المناشئ العالمية — محمصة كافيين سيب</span>
+            </div>
+            <div class="flex items-center gap-10 px-4" aria-hidden="true">
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🔥 خصم فوري على <strong class="text-brand-orange">بوكس كلاسيك (99 ر.س)</strong> و <strong class="text-brand-orange">بوكس اثيوبيات (129 ر.س)</strong></span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⚡ كود خصم إضافي 10% في السلة: <span class="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-bold" dir="ltr">SIP10</span></span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🚚 شحن سريع ومبرد للطلبات فوق <strong class="text-white">199 ر.س مجاناً</strong></span>
+              <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⭐ محاصيل مختصة من أفضل المناشئ العالمية — محمصة كافيين سيب</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. STICKY GLASSMORPHIC HEADER -->
+        <header class="sticky top-0 z-40 bg-brand-ivory/90 backdrop-blur-lg border-b border-brand-border/80">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+              <a href="#hero" class="flex items-center gap-3 group">
+                <div class="w-12 h-11 rounded-xl bg-brand-dark flex items-center justify-center p-1.5 shadow-sm group-hover:bg-brand-terracotta transition-colors">
+                  <svg class="w-full h-full text-brand-orange" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                </div>
+                <div class="leading-none">
+                  <span class="block text-lg sm:text-xl font-extrabold text-brand-dark tracking-tight">كافيين سيب</span>
+                  <span class="block font-script text-base text-brand-orange font-bold -mt-0.5" dir="ltr">Caffeine Sip</span>
+                </div>
+              </a>
+              <nav class="hidden lg:flex items-center gap-7 text-sm font-semibold text-brand-charcoal">
+                <a href="#promo-banners" class="hover:text-brand-orange transition-colors">العروض الحصرية</a>
+                <a href="#video-experience" class="hover:text-brand-orange transition-colors">تجربة الاستخلاص</a>
+                <a href="#shop" class="hover:text-brand-orange transition-colors">منتجات المتجر</a>
+                <a href="#boxes-offer" class="hover:text-brand-orange transition-colors text-brand-terracotta">عروض البوكسات 🔥</a>
+                <a href="#reviews" class="hover:text-brand-orange transition-colors">آراء العملاء</a>
+              </nav>
+              <div class="flex items-center gap-2.5">
+                <a href="#boxes-offer" class="hidden sm:inline-flex items-center gap-1.5 bg-brand-orange hover:bg-brand-orange-dark text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-glow transition-all">
+                  <span>عروض البوكسات</span>
+                  <span class="text-[11px] bg-white/20 px-1.5 py-0.5 rounded-md">وفر 56 ر.س</span>
+                </a>
+                <button id="cs-open-cart-btn" type="button" aria-label="فتح سلة التسوق" class="relative inline-flex items-center gap-2 bg-brand-dark hover:bg-brand-terracotta text-brand-ivory px-4 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  <span class="hidden sm:inline">السلة</span>
+                  <span id="cs-cart-badge" class="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-brand-orange text-white text-xs font-extrabold">0</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main>
+          <!-- 3. HERO SECTION -->
+          <section id="hero" class="relative min-h-[86vh] flex items-center overflow-hidden bg-brand-dark text-brand-ivory">
+            <video class="absolute inset-0 w-full h-full object-cover scale-105 opacity-55" autoplay muted loop playsinline poster="https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg"><source src="https://assets.mixkit.co/videos/41865/41865-720.mp4" type="video/mp4" /></video>
+            <div class="absolute inset-0 bg-gradient-to-l from-[#1c120d]/95 via-[#1c120d]/75 to-[#9a3b12]/45"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-transparent to-transparent"></div>
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 w-full">
+              <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-right">
+                  <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-brand-orange/40 text-xs sm:text-sm font-semibold text-brand-ivory">
+                    <span class="w-2.5 h-2.5 rounded-full bg-brand-orange animate-ping"></span>
+                    <span>Exploring the rich depth of every bean • محمصة كافيين سيب</span>
+                  </div>
+                  <h1 class="text-3xl sm:text-5xl lg:text-[3.5rem] font-black leading-[1.18] tracking-tight text-white">أول رشفة من <span class="text-brand-orange">كافيين سيب</span>...<br class="hidden sm:block" />وتنسى كل قهوة جرّبتها قبلها.</h1>
+                  <p class="text-base sm:text-lg text-brand-ivory/85 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">ننتقي أجود محاصيل البن من أفضل المناشئ العالمية بتحميص احترافي يكشف ثراء النكهات ويبرز التوازن والحلاوة في كل حبة قهوة — <strong class="text-brand-peach">ابدأ بـ بوكس اثيوبيات أو بوكس كلاسيك بخصم يصل إلى 34%!</strong></p>
+                  <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                    <button type="button" onclick="window.csQuickBuyProduct('448705895')" class="cta-pulse inline-flex items-center justify-center gap-2.5 bg-brand-orange hover:bg-brand-orange-dark text-white px-8 py-4 rounded-2xl font-extrabold text-sm sm:text-base transition-all shadow-glow cursor-pointer"><span>اطلب بوكس اثيوبيات الآن — 129 ر.س</span><svg class="w-5 h-5 rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+                    <button type="button" onclick="window.csOpenVideoModal('https://assets.mixkit.co/videos/41865/41865-720.mp4', 'استخلاص قهوة كافيين سيب بدقة HD')" class="inline-flex items-center justify-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/25 px-6 py-4 rounded-2xl font-bold text-sm sm:text-base transition-all cursor-pointer"><span class="w-7 h-7 rounded-full bg-brand-orange text-white flex items-center justify-center"><svg class="w-3.5 h-3.5 fill-current mr-0.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></span><span>شاهد فيديو الاستخلاص</span></button>
+                  </div>
+                  <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs sm:text-sm text-brand-ivory/80">
+                    <span class="inline-flex items-center gap-1.5"><span class="text-brand-orange text-base">★★★★★</span><strong class="text-white">4.9/5</strong> تقييم العملاء</span>
+                    <span class="text-white/30">|</span>
+                    <span>✅ محاصيل طازجة 250g و 1kg</span>
+                    <span class="text-white/30">|</span>
+                    <span>⚡ مدى، Apple Pay، وتمارا</span>
+                  </div>
+                </div>
+
+                <!-- Hero Product Card with Slider -->
+                <div class="lg:col-span-5">
+                  <div class="relative bg-brand-ivory/95 backdrop-blur-xl text-brand-dark rounded-[2rem] p-5 sm:p-6 border border-brand-orange/30 shadow-2xl">
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange text-white text-xs font-extrabold">🔥 المحصول الأشهر في المتجر</span>
+                      <span class="text-xs font-bold text-brand-terracotta bg-brand-peach/25 px-2.5 py-1 rounded-lg">متوفر للشحن الفوري</span>
+                    </div>
+                    <div id="cs-hero-media-slider" class="relative rounded-2xl overflow-hidden bg-brand-cream aspect-[16/11] mb-4 border border-brand-border">
+                      <div class="cs-hero-media-slide absolute inset-0 transition-all duration-700 ease-out" style="transform: translateX(0%); opacity: 1;">
+                        <img src="https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg" alt="محصول أثيوبيا قوجي كافيين سيب" class="w-full h-full object-cover" />
+                        <div class="absolute bottom-3 right-3 bg-brand-dark/85 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1 rounded-lg">ارتفاع 2100م • مجففة • 250 جم</div>
+                      </div>
+                      <div class="cs-hero-media-slide absolute inset-0 transition-all duration-700 ease-out" style="transform: translateX(100%); opacity: 0;">
+                        <video class="w-full h-full object-cover" autoplay muted loop playsinline poster="https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg"><source src="https://assets.mixkit.co/videos/236/236-720.mp4" type="video/mp4" /></video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d]/60 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-3 right-3 bg-brand-orange/90 text-white text-[11px] font-bold px-3 py-1 rounded-lg">شاهد تحضير قوجي بالفلتر ▶</div>
+                      </div>
+                    </div>
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                      <button type="button" class="cs-hero-slide-dot w-2.5 h-2.5 rounded-full bg-brand-orange transition-all cursor-pointer" data-slide="0" aria-label="الصورة" onclick="window.csShowHeroSlide(0)"></button>
+                      <button type="button" class="cs-hero-slide-dot w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white transition-all cursor-pointer" data-slide="1" aria-label="الفيديو" onclick="window.csShowHeroSlide(1)"></button>
+                    </div>
+                    <div class="space-y-3">
+                      <div class="flex items-start justify-between gap-3">
+                        <div><h2 class="text-xl font-extrabold text-brand-dark">أثيوبيا قوجي — Guji</h2><p class="text-xs text-brand-charcoal mt-0.5">فواكه مجففة • توت • زبيب • حلاوة وقوام ممتلئ</p></div>
+                        <div class="text-left shrink-0"><span class="text-2xl font-black text-brand-orange">60 <span class="text-xs font-bold text-brand-dark">ر.س</span></span></div>
+                      </div>
+                      <div class="grid grid-cols-1 text-xs"><button type="button" onclick="window.csSelectHeroGrind(this, 'حبوب كاملة')" class="cs-hero-grind-btn py-2 rounded-xl border-2 border-brand-orange bg-brand-orange/10 text-brand-terracotta font-bold cursor-pointer">حبوب كاملة</button></div>
+                      <button type="button" onclick="window.csAddHeroProductToCart()" class="w-full py-3.5 rounded-xl bg-brand-dark hover:bg-brand-orange text-white font-extrabold text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"><span>أضف أثيوبيا قوجي للسلة — 60 ر.س</span></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. KINETIC BRAND MARQUEE -->
+          <div class="bg-brand-orange text-white py-3.5 overflow-hidden border-y border-brand-terracotta/30">
+            <div class="animate-marquee-slow gap-8 text-sm sm:text-base font-extrabold tracking-wide whitespace-nowrap">
+              <div class="flex items-center gap-8 px-4"><span>✦ CAFFEINE SIP ROASTERY</span><span>✦ أثيوبيا قوجي</span><span>✦ كولمبيا عنب</span><span>✦ البرازيل كندر ويفر</span><span>✦ بوكس اثيوبيات 129 ر.س</span><span>✦ بوكس كلاسيك 99 ر.س</span><span>✦ أدوات باريستا احترافية</span></div>
+              <div class="flex items-center gap-8 px-4" aria-hidden="true"><span>✦ CAFFEINE SIP ROASTERY</span><span>✦ أثيوبيا قوجي</span><span>✦ كولمبيا عنب</span><span>✦ البرازيل كندر ويفر</span><span>✦ بوكس اثيوبيات 129 ر.س</span><span>✦ بوكس كلاسيك 99 ر.س</span><span>✦ أدوات باريستا احترافية</span></div>
+            </div>
+          </div>
+
+          <!-- 5. PROMO BANNERS -->
+          <section id="promo-banners" class="scroll-mt-24 py-14 sm:py-20 bg-brand-ivory">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+              <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div><span class="text-xs font-extrabold text-brand-orange uppercase tracking-wider">عروض حقيقية من متجر caffeinesip.store</span><h2 class="text-2xl sm:text-4xl font-black text-brand-dark mt-1">أقوى العروض والمنتجات المختارة</h2></div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="window.csPrevSlide()" aria-label="البنر السابق" class="w-10 h-10 rounded-xl border border-brand-border bg-white hover:bg-brand-orange hover:text-white hover:border-brand-orange flex items-center justify-center transition-colors cursor-pointer"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg></button>
+                  <button type="button" onclick="window.csNextSlide()" aria-label="البنر التالي" class="w-10 h-10 rounded-xl border border-brand-border bg-white hover:bg-brand-orange hover:text-white hover:border-brand-orange flex items-center justify-center transition-colors cursor-pointer"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                </div>
+              </div>
+              <div class="relative rounded-[2rem] overflow-hidden border border-brand-border shadow-elevated bg-brand-dark min-h-[360px] sm:min-h-[420px]">
+                <div id="cs-promo-slider" class="relative w-full h-full">
+                  <div class="cs-promo-slide grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#1c120d] via-[#2b150c] to-[#9a3b12]">
+                    <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white">
+                      <span class="inline-block px-3.5 py-1 rounded-full bg-brand-orange text-white text-xs font-extrabold">🔥 وفر 56 ر.س • خصم 30%</span>
+                      <h3 class="text-2xl sm:text-4xl font-black leading-tight">بوكس اثيوبيات — ثلاث تجارب استثنائية</h3>
+                      <p class="text-sm sm:text-base text-brand-ivory/80 leading-relaxed">ثلاث تجارب من أعماق المحاصيل الإثيوبية المختارة بعناية، تمنحك تنوعاً فاكهياً وعطرياً مذهلاً بسعر خاص.</p>
+                      <div class="flex flex-wrap items-center gap-4 pt-1">
+                        <button type="button" onclick="window.csQuickBuyProduct('448705895')" class="px-7 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer">اطلب بوكس اثيوبيات — 129 ر.س</button>
+                        <span class="text-sm text-brand-peach line-through font-semibold">بدلاً من 185 ر.س</span>
+                      </div>
+                    </div>
+                    <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream"><img src="https://cdn.files.salla.network/products/1916802350/bea46442-2d24-4b1c-94c6-1c90413d5353-original.jpeg" alt="بوكس اثيوبيات كافيين سيب" class="w-full h-full object-cover" /></div>
+                  </div>
+                  <div class="cs-promo-slide hidden grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#2b150c] via-[#454545] to-[#1c120d]">
+                    <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white">
+                      <span class="inline-block px-3.5 py-1 rounded-full bg-brand-peach text-brand-dark text-xs font-extrabold">☕ خصم 34% • وفر 52 ر.س</span>
+                      <h3 class="text-2xl sm:text-4xl font-black leading-tight">بوكس كلاسيك — لعشاق النكهات المتوازنة</h3>
+                      <p class="text-sm sm:text-base text-brand-ivory/80 leading-relaxed">ثلاث تجارب لعشاق المحاصيل الكلاسيكية بحلاوة عالية وقوام ممتلئ — مثالي للإسبريسو ومشروبات الحليب اليومية.</p>
+                      <div class="flex flex-wrap items-center gap-4 pt-1">
+                        <button type="button" onclick="window.csQuickBuyProduct('1715765012')" class="px-7 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer">اطلب بوكس كلاسيك — 99 ر.س</button>
+                        <span class="text-sm text-brand-peach line-through font-semibold">بدلاً من 151 ر.س</span>
+                      </div>
+                    </div>
+                    <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream"><img src="https://cdn.files.salla.network/products/1916802350/98189e41-3f01-404a-9a63-13a0fc0783f0-original.webp" alt="بوكس كلاسيك كافيين سيب" class="w-full h-full object-cover" /></div>
+                  </div>
+                  <div class="cs-promo-slide hidden grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#9a3b12] via-[#c74f12] to-[#f0660c]">
+                    <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white">
+                      <span class="inline-block px-3.5 py-1 rounded-full bg-brand-dark text-white text-xs font-extrabold">⚙️ أدوات الباريستا الذكية • خصومات فورية</span>
+                      <h3 class="text-2xl sm:text-4xl font-black leading-tight">ميزان النانو الذكي + دوزنق كاب الرقمي</h3>
+                      <p class="text-sm sm:text-base text-white/90 leading-relaxed">اضبط جرعتك ووقت الاستخلاص بدقة احترافية بدون فوضى — بخصومات تصل إلى 31 ر.س على أدوات التحضير الذكية.</p>
+                      <div class="flex flex-wrap items-center gap-4 pt-1">
+                        <button type="button" onclick="window.csQuickBuyProduct('1475126343')" class="px-7 py-3.5 rounded-xl bg-brand-dark hover:bg-black text-white font-extrabold text-sm transition-all cursor-pointer">ميزان النانو — 99 ر.س</button>
+                        <button type="button" onclick="window.csQuickBuyProduct('1618652840')" class="px-5 py-3.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-sm transition-all cursor-pointer">دوزنق كاب — 89 ر.س</button>
+                      </div>
+                    </div>
+                    <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream"><img src="https://cdn.files.salla.network/products/1916802350/c33e116b-7b07-48da-94d6-add0633bdf6f-original.jpeg" alt="ميزان القهوة الذكي النانو" class="w-full h-full object-cover" /></div>
+                  </div>
+                </div>
+                <div class="absolute bottom-4 right-7 z-20 flex items-center gap-2">
+                  <button type="button" onclick="window.csGoToSlide(0)" class="cs-slider-dot h-2.5 w-8 rounded-full bg-brand-orange transition-all cursor-pointer" aria-label="الشريحة 1"></button>
+                  <button type="button" onclick="window.csGoToSlide(1)" class="cs-slider-dot h-2.5 w-2.5 rounded-full bg-white/40 hover:bg-white transition-all cursor-pointer" aria-label="الشريحة 2"></button>
+                  <button type="button" onclick="window.csGoToSlide(2)" class="cs-slider-dot h-2.5 w-2.5 rounded-full bg-white/40 hover:bg-white transition-all cursor-pointer" aria-label="الشريحة 3"></button>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="relative rounded-3xl overflow-hidden border border-brand-border min-h-[260px] flex items-end p-6 sm:p-8 group shadow-elevated"><img src="https://cdn.files.salla.network/products/1916802350/d1cf20f9-3819-4073-89e8-ae16c13d841d-original.webp" alt="محاصيل 1 كيلو كافيين سيب" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" /><div class="absolute inset-0 bg-gradient-to-t from-[#1c120d]/95 via-[#1c120d]/55 to-transparent"></div><div class="relative z-10 text-white space-y-2.5 max-w-md"><span class="inline-block px-3 py-1 rounded-lg bg-brand-orange text-xs font-extrabold">محاصيل 1kg الاقتصادية</span><h3 class="text-xl sm:text-2xl font-black leading-snug">اثوبيا قيدب و شاكيسو 1kg بـ 215 ر.س + شحن مجاني!</h3><a href="#shop" onclick="window.csFilterTo('1kg')" class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-peach hover:text-white pt-1"><span>اطلب عبوات الكيلو الآن</span><span>←</span></a></div></div>
+                <div class="relative rounded-3xl overflow-hidden border border-brand-terracotta/30 bg-brand-terracotta text-white min-h-[260px] flex items-center p-6 sm:p-8 shadow-elevated"><div class="absolute inset-0 brand-pattern-bg opacity-15"></div><div class="relative z-10 space-y-3 max-w-lg"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-dark/50 text-brand-peach text-xs font-extrabold border border-white/15">🍇 إصدار خاص ومميز</div><h3 class="text-xl sm:text-3xl font-black leading-snug">كولمبيا عنب — تجربة فاكهية استثنائية!</h3><p class="text-sm text-brand-ivory/85 leading-relaxed">محصول كولومبي فاخر بإيحاءات العنب الواضحة والحلاوة العالية، متوفر الآن بـ 89 ر.س فقط.</p><button type="button" onclick="window.csQuickBuyProduct('786827294')" class="mt-2 inline-flex items-center gap-2 bg-white text-brand-terracotta hover:bg-brand-ivory px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-colors cursor-pointer">اطلب كولمبيا عنب الآن — 89 ر.س ←</button></div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. VIDEO EXPERIENCE -->
+          <section id="video-experience" class="scroll-mt-24 py-14 sm:py-20 bg-brand-dark text-brand-ivory relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                <div><span class="text-xs font-extrabold text-brand-orange uppercase tracking-wider">جودة تشاهدها بعينك قبل أن تتذوقها</span><h2 class="text-2xl sm:text-4xl font-black text-white mt-1">عيش لحظة التحضير — فيديو حقيقي بجودة HD</h2></div>
+                <p class="text-sm text-brand-ivory/70 max-w-md">اضغط على أي فيديو لتشغيله كاملاً أو أضف المنتج مباشرة لسلتك.</p>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="group relative rounded-3xl overflow-hidden bg-black border border-white/10 shadow-2xl"><div class="relative aspect-[4/5] overflow-hidden cursor-pointer" onclick="window.csOpenVideoModal('https://assets.mixkit.co/videos/3572/3572-720.mp4', 'كبس وتحضير الإسبريسو بدقة احترافية')"><video class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" autoplay muted loop playsinline poster="https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg"><source src="https://assets.mixkit.co/videos/3572/3572-720.mp4" type="video/mp4" /></video><div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-[#1c120d]/25 to-transparent"></div><div class="absolute bottom-0 inset-x-0 p-5 space-y-2.5"><h3 class="text-lg font-extrabold text-white">دقة الاستخلاص بلا عناء</h3><p class="text-xs text-brand-ivory/80">ارفع دقة استخلاصك مع ميزان النانو الذكي وبخاخ RDT.</p><button type="button" onclick="event.stopPropagation(); window.csAddToCart('1475126343')" class="w-full py-2.5 rounded-xl bg-white/15 hover:bg-brand-orange backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-colors cursor-pointer">أضف ميزان النانو — 99 ر.س</button></div></div></div>
+                <div class="group relative rounded-3xl overflow-hidden bg-black border border-brand-orange/40 shadow-2xl"><div class="relative aspect-[4/5] overflow-hidden cursor-pointer" onclick="window.csOpenVideoModal('https://assets.mixkit.co/videos/236/236-720.mp4', 'ترشيح أثيوبيا قوجي — وضوح الفواكه والتوت')"><video class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" autoplay muted loop playsinline poster="https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg"><source src="https://assets.mixkit.co/videos/236/236-720.mp4" type="video/mp4" /></video><div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-[#1c120d]/25 to-transparent"></div><div class="absolute bottom-0 inset-x-0 p-5 space-y-2.5"><h3 class="text-lg font-extrabold text-white">وضوح الإيحاءات في كل صبّة</h3><p class="text-xs text-brand-ivory/80">فواكه مجففة وتوت وزبيب في محصول أثيوبيا قوجي.</p><button type="button" onclick="event.stopPropagation(); window.csAddToCart('214325586', 'حبوب كاملة (250g)')" class="w-full py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white text-xs font-extrabold transition-colors cursor-pointer shadow-glow">أضف أثيوبيا قوجي — 60 ر.س</button></div></div></div>
+                <div class="group relative rounded-3xl overflow-hidden bg-black border border-white/10 shadow-2xl"><div class="relative aspect-[4/5] overflow-hidden cursor-pointer" onclick="window.csOpenVideoModal('https://assets.mixkit.co/videos/41858/41858-720.mp4', 'مشروبات الحليب مع البرازيل كندر ويفر')"><video class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" autoplay muted loop playsinline poster="https://cdn.files.salla.network/products/1916802350/eaa71fc2-dd28-43e2-b251-0783d4380239-original.jpeg"><source src="https://assets.mixkit.co/videos/41858/41858-720.mp4" type="video/mp4" /></video><div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-[#1c120d]/25 to-transparent"></div><div class="absolute bottom-0 inset-x-0 p-5 space-y-2.5"><h3 class="text-lg font-extrabold text-white">توازن ساحر مع الحليب</h3><p class="text-xs text-brand-ivory/80">جرّب البرازيل كندر ويفر 250g لنكهة شوكولاتة غنية.</p><button type="button" onclick="event.stopPropagation(); window.csAddToCart('190606224', 'حبوب كاملة (250g)')" class="w-full py-2.5 rounded-xl bg-white/15 hover:bg-brand-orange backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-colors cursor-pointer">أضف البرازيل كندر ويفر — 59 ر.س</button></div></div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7. SHOP CATALOG -->
+          <section id="shop" class="scroll-mt-24 py-14 sm:py-20 bg-brand-ivory">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                <div><span class="text-xs font-extrabold text-brand-orange uppercase tracking-wider">كتالوج caffeinesip.store الحقيقي</span><h2 class="text-2xl sm:text-4xl font-black text-brand-dark mt-1">جميع منتجات محمصة كافيين سيب</h2></div>
+                <div class="flex flex-wrap gap-2" id="cs-shop-filters">
+                  <button type="button" data-cat="all" class="cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-brand-dark text-white cursor-pointer transition-all">الكل (15)</button>
+                  <button type="button" data-cat="boxes" class="cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-brand-charcoal border border-brand-border hover:border-brand-orange cursor-pointer transition-all">بوكسات</button>
+                  <button type="button" data-cat="250g" class="cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-brand-charcoal border border-brand-border hover:border-brand-orange cursor-pointer transition-all">محاصيل 250g</button>
+                  <button type="button" data-cat="1kg" class="cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-brand-charcoal border border-brand-border hover:border-brand-orange cursor-pointer transition-all">محاصيل 1kg</button>
+                  <button type="button" data-cat="tools" class="cs-shop-filter px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-brand-charcoal border border-brand-border hover:border-brand-orange cursor-pointer transition-all">أدوات وفلاتر</button>
+                </div>
+              </div>
+              <div id="cs-shop-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7"></div>
+            </div>
+          </section>
+
+          <!-- 8. BOXES OFFER -->
+          <section id="boxes-offer" class="scroll-mt-24 py-16 sm:py-24 bg-gradient-to-br from-[#1c120d] via-[#2b150c] to-[#9a3b12] text-white relative overflow-hidden">
+            <div class="absolute inset-0 brand-pattern-bg opacity-10"></div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div class="text-center max-w-2xl mx-auto mb-12 space-y-3">
+                <div class="inline-flex items-center gap-2 bg-brand-dark/70 border border-brand-orange/40 px-4 py-1.5 rounded-full text-xs font-bold"><span>⏳ ينتهي خصم البوكسات خلال:</span><span id="cs-countdown-timer" class="text-brand-orange font-mono text-sm" dir="ltr">03:44:59</span></div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white">وفّر أكثر مع بوكسات كافيين سيب</h2>
+                <p class="text-sm sm:text-base text-brand-ivory/80">اختر البوكس الذي يناسب ذائقتك واحصل على 3 محاصيل مختارة بأقوى خصم في المتجر.</p>
+              </div>
+              <div class="grid lg:grid-cols-2 gap-8 items-stretch">
+                <div class="bg-brand-ivory text-brand-dark rounded-[2rem] p-6 sm:p-8 shadow-2xl border-2 border-brand-orange flex flex-col justify-between relative"><span class="absolute -top-3.5 right-6 bg-brand-orange text-white text-xs font-black px-4 py-1 rounded-full shadow-lg">🔥 الأكثر مبيعاً • وفر 56 ر.س</span><div><div class="rounded-2xl overflow-hidden aspect-[16/10] bg-brand-cream mb-5 border border-brand-border"><img src="https://cdn.files.salla.network/products/1916802350/bea46442-2d24-4b1c-94c6-1c90413d5353-original.jpeg" alt="بوكس اثيوبيات" class="w-full h-full object-cover" /></div><h3 class="text-2xl font-black text-brand-dark">بوكس اثيوبيات</h3><p class="text-sm text-brand-charcoal mt-1.5">ثلاث تجارب من أعماق المحاصيل الإثيوبية المختارة بعناية، لعشاق الفاكهية والترشيح اليدوي V60.</p><ul class="mt-4 space-y-2 text-xs sm:text-sm font-semibold text-brand-dark bg-brand-cream p-4 rounded-2xl border border-brand-border"><li>✓ 3 محاصيل إثيوبية مختصة بتحميص طازج</li><li>✓ مثالي للترشيح V60 والقهوة المقطرة والباردة</li><li>✓ خصم فوري 30% بدلاً من شراء كل محصول منفرداً</li></ul></div><div class="pt-6 flex items-center justify-between gap-4"><div><span class="text-xs text-brand-charcoal line-through block">185 ر.س</span><span class="text-3xl font-black text-brand-orange">129 <span class="text-xs font-bold text-brand-dark">ر.س</span></span></div><button type="button" onclick="window.csQuickBuyProduct('448705895')" class="cta-pulse flex-1 py-3.5 px-5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-black text-sm shadow-glow transition-all cursor-pointer">اطلب بوكس اثيوبيات الآن ⚡</button></div></div>
+                <div class="bg-brand-ivory text-brand-dark rounded-[2rem] p-6 sm:p-8 shadow-2xl border border-brand-border flex flex-col justify-between relative"><span class="absolute -top-3.5 right-6 bg-brand-dark text-white text-xs font-black px-4 py-1 rounded-full shadow-lg">☕ خصم 34% • وفر 52 ر.س</span><div><div class="rounded-2xl overflow-hidden aspect-[16/10] bg-brand-cream mb-5 border border-brand-border"><img src="https://cdn.files.salla.network/products/1916802350/98189e41-3f01-404a-9a63-13a0fc0783f0-original.webp" alt="بوكس كلاسيك" class="w-full h-full object-cover" /></div><h3 class="text-2xl font-black text-brand-dark">بوكس كلاسيك</h3><p class="text-sm text-brand-charcoal mt-1.5">ثلاث تجارب لعشاق المحاصيل الكلاسيكية المتوازنة، مثالي للإسبريسو ومشروبات الحليب اليومية.</p><ul class="mt-4 space-y-2 text-xs sm:text-sm font-semibold text-brand-dark bg-brand-cream p-4 rounded-2xl border border-brand-border"><li>✓ 3 محاصيل كلاسيكية بقوام ممتلئ وحلاوة عالية</li><li>✓ مثالي للإسبريسو، اللاتيه، والفلات وايت</li><li>✓ أقل من 33 ر.س للمحصول الواحد!</li></ul></div><div class="pt-6 flex items-center justify-between gap-4"><div><span class="text-xs text-brand-charcoal line-through block">151 ر.س</span><span class="text-3xl font-black text-brand-dark">99 <span class="text-xs font-bold text-brand-charcoal">ر.س</span></span></div><button type="button" onclick="window.csQuickBuyProduct('1715765012')" class="flex-1 py-3.5 px-5 rounded-xl bg-brand-dark hover:bg-brand-orange text-white font-black text-sm transition-all cursor-pointer">اطلب بوكس كلاسيك الآن ⚡</button></div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 9. REVIEWS -->
+          <section id="reviews" class="scroll-mt-24 py-14 sm:py-20 bg-brand-cream border-t border-brand-border">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="text-center max-w-2xl mx-auto mb-12"><span class="text-xs font-extrabold text-brand-orange uppercase">آراء عملاء كافيين سيب</span><h2 class="text-2xl sm:text-4xl font-black text-brand-dark mt-1">تجارب حقيقية تضمن لك اختيارك</h2></div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-3xl p-6 border border-brand-border shadow-sm space-y-4"><div class="flex items-center justify-between"><span class="text-brand-orange text-lg">★★★★★</span><span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-brand-cream text-brand-terracotta">اشترى: بوكس اثيوبيات</span></div><p class="text-sm text-brand-charcoal leading-relaxed">"بوكس اثيوبيات جبار بكل معنى الكلمة! خاصة أثيوبيا قوجي، الإيحاءات الفاكهية واضحة جداً والتغليف فخم ويصلح هدية."</p><div class="pt-3 border-t border-brand-border flex items-center justify-between text-xs"><strong class="text-brand-dark">خالد العتيبي</strong><span class="text-brand-charcoal/70">الرياض • عميل موثق ✓</span></div></div>
+                <div class="bg-white rounded-3xl p-6 border border-brand-border shadow-sm space-y-4"><div class="flex items-center justify-between"><span class="text-brand-orange text-lg">★★★★★</span><span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-brand-cream text-brand-terracotta">اشترى: كولمبيا عنب</span></div><p class="text-sm text-brand-charcoal leading-relaxed">"كولمبيا عنب تجربة مختلفة فعلاً، نكهة العنب والحلاوة في الكوب ممتازة مع فلاتر تايمور. شحن سريع وخدمة راقية."</p><div class="pt-3 border-t border-brand-border flex items-center justify-between text-xs"><strong class="text-brand-dark">نورة الشمري</strong><span class="text-brand-charcoal/70">جدة • عميل موثق ✓</span></div></div>
+                <div class="bg-white rounded-3xl p-6 border border-brand-border shadow-sm space-y-4"><div class="flex items-center justify-between"><span class="text-brand-orange text-lg">★★★★★</span><span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-brand-cream text-brand-terracotta">اشترى: ميزان النانو + دوزنق كاب</span></div><p class="text-sm text-brand-charcoal leading-relaxed">"ميزان القهوة الذكي النانو وبخاخ RDT فرقوا معي جداً في ضبط الإسبريسو الصباحي، والسعر مقارنة بالجودة ممتاز."</p><div class="pt-3 border-t border-brand-border flex items-center justify-between text-xs"><strong class="text-brand-dark">طارق الغامدي</strong><span class="text-brand-charcoal/70">الدمام • عميل موثق ✓</span></div></div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <!-- 10. FOOTER -->
+        <footer class="bg-brand-dark text-brand-ivory pt-14 pb-24 sm:pb-10 border-t border-brand-orange/20">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-white/10">
+              <div class="space-y-3"><div class="flex items-center gap-3"><div class="w-11 h-10 rounded-xl bg-white/10 p-1.5 flex items-center justify-center"><svg class="w-full h-full text-brand-orange" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg></div><div><span class="font-extrabold text-lg block leading-none">كافيين سيب</span><span class="font-script text-brand-orange text-base" dir="ltr">Caffeine Sip</span></div></div><p class="text-xs sm:text-sm text-brand-ivory/70 leading-relaxed">كافيين سيب محمصة قهوة مختصة تنتقي أجود محاصيل البن من أفضل المناشئ العالمية وتحميص احترافي يكشف ثراء النكهات.</p></div>
+              <div><h4 class="font-bold text-sm text-white mb-3">أقسام المتجر</h4><ul class="space-y-2 text-xs sm:text-sm text-brand-ivory/70"><li><a href="#boxes-offer" class="hover:text-brand-orange transition-colors">عروض البوكسات (اثيوبيات / كلاسيك)</a></li><li><a href="#shop" onclick="window.csFilterTo('250g')" class="hover:text-brand-orange transition-colors">محاصيل 250g</a></li><li><a href="#shop" onclick="window.csFilterTo('1kg')" class="hover:text-brand-orange transition-colors">محاصيل 1kg</a></li><li><a href="#shop" onclick="window.csFilterTo('tools')" class="hover:text-brand-orange transition-colors">أدوات ومستلزمات القهوة</a></li></ul></div>
+              <div><h4 class="font-bold text-sm text-white mb-3">المتجر الرسمي</h4><ul class="space-y-2 text-xs sm:text-sm text-brand-ivory/70"><li><a href="https://caffeinesip.store/" target="_blank" rel="noopener" class="text-brand-orange hover:underline" dir="ltr">caffeinesip.store ↗</a></li><li>المملكة العربية السعودية</li><li>شحن سريع ومبرد لجميع المدن</li></ul></div>
+              <div><h4 class="font-bold text-sm text-white mb-3">دفع آمن وسريع</h4><div class="flex flex-wrap gap-2"><span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-bold">مدى mada</span><span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-bold">Apple Pay</span><span class="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-bold">Visa / Master</span><span class="px-3 py-1.5 rounded-lg bg-brand-orange/25 text-brand-peach text-xs font-bold">تمارا / تابي</span></div></div>
+            </div>
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-brand-ivory/50"><p>© 2026 محمصة كافيين سيب | Caffeine Sip. جميع الحقوق محفوظة.</p><p>استخدم كود <strong class="text-brand-orange" dir="ltr">SIP10</strong> في السلة لخصم 10% إضافي</p></div>
+          </div>
+        </footer>
+
+        <!-- STICKY MOBILE BAR -->
+        <div class="fixed bottom-0 inset-x-0 z-30 sm:hidden bg-brand-dark/95 backdrop-blur-md border-t border-brand-orange/40 p-3 flex items-center justify-between gap-3"><div class="text-white leading-tight"><div class="text-[11px] text-brand-peach font-bold">بوكس اثيوبيات</div><div class="text-base font-black">129 ر.س <span class="text-xs font-normal line-through text-white/50">185</span></div></div><button type="button" onclick="window.csQuickBuyProduct('448705895')" class="flex-1 py-3 rounded-xl bg-brand-orange text-white font-extrabold text-sm shadow-glow">اطلب الآن ⚡</button></div>
+
+        <!-- VIDEO MODAL -->
+        <div id="cs-video-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md"><div class="relative w-full max-w-4xl bg-brand-dark rounded-3xl overflow-hidden border border-white/15 shadow-2xl"><div class="flex items-center justify-between px-5 py-3.5 border-b border-white/10"><h3 id="cs-video-modal-title" class="text-sm sm:text-base font-bold text-white"></h3><button type="button" onclick="window.csCloseVideoModal()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-brand-orange text-white flex items-center justify-center cursor-pointer">✕</button></div><div class="bg-black aspect-video"><video id="cs-modal-video-player" class="w-full h-full object-contain" controls autoplay playsinline></video></div></div></div>
+
+        <!-- CART DRAWER -->
+        <div id="cs-cart-overlay" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm" onclick="if(event.target===this)window.csCloseCart()"><div id="cs-cart-drawer" class="fixed top-0 left-0 h-full w-full max-w-md bg-brand-ivory border-r border-brand-border shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300"><div class="px-6 py-4 bg-white border-b border-brand-border flex items-center justify-between"><div class="flex items-center gap-2"><h3 class="text-lg font-extrabold text-brand-dark">سلة مشترياتك</h3><span id="cs-drawer-count" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-orange/15 text-brand-orange">0</span></div><button type="button" onclick="window.csCloseCart()" class="w-9 h-9 rounded-xl border border-brand-border hover:bg-brand-cream flex items-center justify-center font-bold cursor-pointer">✕</button></div><div class="px-6 py-3 bg-brand-cream border-b border-brand-border text-xs"><div id="cs-shipping-msg" class="font-semibold text-brand-dark mb-1.5"></div><div class="w-full h-2 bg-brand-border rounded-full overflow-hidden"><div id="cs-shipping-bar" class="h-full bg-brand-orange rounded-full transition-all duration-300" style="width:0%"></div></div></div><div id="cs-cart-items" class="flex-1 overflow-y-auto px-6 py-4 space-y-3.5"></div><div class="px-6 py-4 bg-white border-t border-brand-border space-y-3.5"><div class="flex gap-2"><input id="cs-coupon-input" type="text" placeholder="كود الخصم (جرّب SIP10)" class="flex-1 bg-brand-cream border border-brand-border rounded-xl px-3.5 py-2 text-xs font-semibold text-brand-dark focus:outline-none focus:border-brand-orange" /><button type="button" onclick="window.csApplyCoupon()" class="px-4 py-2 rounded-xl bg-brand-dark hover:bg-brand-orange text-white text-xs font-bold transition-colors cursor-pointer">تطبيق</button></div><div id="cs-coupon-feedback" class="hidden text-xs font-bold text-emerald-700"></div><div class="space-y-1 text-sm pt-1"><div class="flex justify-between text-brand-charcoal"><span>المجموع الفرعي</span><span id="cs-subtotal-val" class="font-bold text-brand-dark">0 ر.س</span></div><div id="cs-discount-row" class="hidden justify-between text-emerald-700 font-bold"><span>خصم الكود (10%)</span><span id="cs-discount-val">-0 ر.س</span></div><div class="flex justify-between text-brand-charcoal"><span>الشحن السريع</span><span id="cs-shipping-val" class="font-bold text-brand-dark">—</span></div><div class="flex justify-between text-base font-black text-brand-dark pt-2 border-t border-brand-border"><span>الإجمالي النهائي</span><span id="cs-total-val" class="text-brand-orange">0 ر.س</span></div></div><button id="cs-checkout-btn" type="button" onclick="window.csCompleteOrder()" class="w-full py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" disabled>تأكيد الطلب السريع الآن ⚡</button></div></div>
+
+        <!-- TOAST -->
+        <div id="cs-toast" class="fixed bottom-20 sm:bottom-6 right-5 z-50 hidden items-center gap-2.5 bg-brand-dark text-white px-4 py-3 rounded-xl shadow-2xl border border-brand-orange/50 text-xs sm:text-sm font-bold"><span class="w-2.5 h-2.5 rounded-full bg-brand-orange"></span><span id="cs-toast-text"></span></div>
+      </div>
+    `);
+
+    document.body.appendChild(wrapper);
+
+    // Initialize event listeners
+    initEventListeners();
+    renderShop();
+    renderCart();
+    startCountdown();
+    initHeroSlider();
+    initPromoSlider();
+  }
+
+  function initEventListeners() {
+    // Shop filter buttons
+    $$('.cs-shop-filter').forEach(btn => {
+      btn.addEventListener('click', () => filterTo(btn.dataset.cat));
+    });
+
+    // Cart events
+    $('#cs-open-cart-btn')?.addEventListener('click', openCart);
+    $('#cs-cart-overlay')?.addEventListener('click', (e) => { if (e.target === $('#cs-cart-overlay')) closeCart(); });
+
+    // Video modal
+    $('#cs-video-modal')?.addEventListener('click', (e) => { if (e.target === $('#cs-video-modal')) closeVideoModal(); });
+
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeCart(); closeVideoModal(); }
+    });
+
+    // Coupon input enter key
+    $('#cs-coupon-input')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') applyCoupon(); });
+  }
+
+  function initHeroSlider() {
+    const slides = $$('.cs-hero-media-slide');
+    const dots = $$('.cs-hero-slide-dot');
+    // Auto-slide every 6 seconds
+    setInterval(() => showHeroSlide(heroSlideIdx + 1), 6000);
+  }
+
+  function initPromoSlider() {
+    const slides = $$('.cs-promo-slide');
+    const dots = $$('.cs-slider-dot');
+    // Auto-slide every 5.5 seconds
+    setInterval(() => showSlide(slideIdx + 1), 5500);
+  }
+
+  // ============================================
+  // 13. RUN ON DOM READY
+  // ============================================
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectCustomTheme);
+  } else {
+    injectCustomTheme();
+  }
+
+})();
