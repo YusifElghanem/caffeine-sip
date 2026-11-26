@@ -85,6 +85,57 @@
       animation: fadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
+    /* Promo Slider - Simple Transform Based */
+    #promo-slider {
+      overflow: hidden;
+      position: relative;
+    }
+    .promo-slider-track {
+      display: flex;
+      direction: ltr;
+      width: 300%; /* 3 slides * 100% */
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+    .promo-slide {
+      direction: rtl;
+      flex: 0 0 33.333333%;
+      min-width: 33.333333%;
+      width: 33.333333%;
+    }
+
+    /* Ken Burns on images - subtle continuous zoom */
+    .slide-img {
+      animation: kenBurns 20s ease-in-out infinite;
+      transform-origin: center center;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes kenBurns {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    /* Staggered content reveal on active slide */
+    .promo-slide .slide-content > * {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .promo-slide.active .slide-content > * {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .promo-slide.active .slide-badge { transition-delay: 0.1s; }
+    .promo-slide.active .slide-title { transition-delay: 0.2s; }
+    .promo-slide.active .slide-desc { transition-delay: 0.3s; }
+    .promo-slide.active .slide-price { transition-delay: 0.4s; }
+    .promo-slide.active .slide-cta { transition-delay: 0.5s; }
+
+    /* Dots */
+    .slider-dot { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #fffff8; }
     ::-webkit-scrollbar-thumb { background: #e0926a; border-radius: 9999px; }
@@ -97,16 +148,16 @@
   <div class="bg-brand-dark text-brand-ivory border-b border-brand-orange/30 overflow-hidden py-2.5 relative z-50">
     <div class="animate-marquee-rtl gap-10 text-xs sm:text-sm font-medium whitespace-nowrap">
       <div class="flex items-center gap-10 px-4">
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🔥 خصم فوري على <strong class="text-brand-orange">بوكس كلاسيك (99 ر.س)</strong> و <strong class="text-brand-orange">بوكس اثيوبيات (129 ر.س)</strong></span>
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⚡ كود خصم إضافي 10% في السلة: <span class="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-bold" dir="ltr">SIP10</span></span>
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🚚 شحن سريع ومبرد للطلبات فوق <strong class="text-white">199 ر.س مجاناً</strong></span>
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⭐ محاصيل مختصة من أفضل المناشئ العالمية — محمصة كافيين سيب</span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.5 3 5.5 3 9a5 5 0 1 1-10 0c0-2.2 1.2-4.2 3-5.5C8.5 7.5 10 9 10 9s-.5-4 2-7z"/></svg> خصم فوري على <strong class="text-brand-orange">بوكس كلاسيك (99 ر.س)</strong> و <strong class="text-brand-orange">بوكس اثيوبيات (129 ر.س)</strong></span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> كود خصم إضافي 10% في السلة: <span class="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-bold" dir="ltr">SIP10</span></span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> <svg class="w-4 h-4 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> شحن سريع ومبرد للطلبات فوق <strong class="text-white">199 ر.س مجاناً</strong></span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg> محاصيل مختصة من أفضل المناشئ العالمية — محمصة كافيين سيب</span>
       </div>
       <div class="flex items-center gap-10 px-4" aria-hidden="true">
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🔥 خصم فوري على <strong class="text-brand-orange">بوكس كلاسيك (99 ر.س)</strong> و <strong class="text-brand-orange">بوكس اثيوبيات (129 ر.س)</strong></span>
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⚡ كود خصم إضافي 10% في السلة: <span class="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-bold" dir="ltr">SIP10</span></span>
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> 🚚 شحن سريع ومبرد للطلبات فوق <strong class="text-white">199 ر.س مجاناً</strong></span>
-        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> ⭐ محاصيل مختصة من أفضل المناشئ العالمية — محمصة كافيين سيب</span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.5 3 5.5 3 9a5 5 0 1 1-10 0c0-2.2 1.2-4.2 3-5.5C8.5 7.5 10 9 10 9s-.5-4 2-7z"/></svg> خصم فوري على <strong class="text-brand-orange">بوكس كلاسيك (99 ر.س)</strong> و <strong class="text-brand-orange">بوكس اثيوبيات (129 ر.س)</strong></span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> كود خصم إضافي 10% في السلة: <span class="px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange font-bold" dir="ltr">SIP10</span></span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-orange"></span> <svg class="w-4 h-4 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> شحن سريع ومبرد للطلبات فوق <strong class="text-white">199 ر.س مجاناً</strong></span>
+        <span class="inline-flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-brand-peach"></span> <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg> محاصيل مختصة من أفضل المناشئ العالمية — محمصة كافيين سيب</span>
       </div>
     </div>
   </div>
@@ -131,7 +182,7 @@
           <a href="#promo-banners" class="hover:text-brand-orange transition-colors">العروض الحصرية</a>
           <a href="#video-experience" class="hover:text-brand-orange transition-colors">تجربة الاستخلاص</a>
           <a href="#shop" class="hover:text-brand-orange transition-colors">منتجات المتجر</a>
-          <a href="#boxes-offer" class="hover:text-brand-orange transition-colors text-brand-terracotta">عروض البوكسات 🔥</a>
+          <a href="#boxes-offer" class="hover:text-brand-orange transition-colors text-brand-terracotta"><span class="inline-flex items-center gap-1">عروض البوكسات <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.5 3 5.5 3 9a5 5 0 1 1-10 0c0-2.2 1.2-4.2 3-5.5C8.5 7.5 10 9 10 9s-.5-4 2-7z"/></svg></span></a>
           <a href="#reviews" class="hover:text-brand-orange transition-colors">آراء العملاء</a>
         </nav>
 
@@ -231,13 +282,13 @@
             <!-- Trust Micro-Proof -->
             <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-5 text-xs sm:text-sm text-brand-ivory/80">
               <span class="inline-flex items-center gap-1.5">
-                <span class="text-brand-orange text-base">★★★★★</span>
+                <span class="inline-flex items-center gap-0.5 text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg></span>
                 <strong class="text-white">4.9/5</strong> تقييم العملاء
               </span>
               <span class="text-white/30">|</span>
-              <span>✅ محاصيل طازجة 250g و 1kg</span>
+              <span class="inline-flex items-center gap-1.5"><svg class="w-4 h-4 inline-block shrink-0 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> محاصيل طازجة 250g و 1kg</span>
               <span class="text-white/30">|</span>
-              <span>⚡ مدى، Apple Pay، وتمارا</span>
+              <span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> مدى، Apple Pay، وتمارا</span>
             </div>
           </div>
 
@@ -246,22 +297,47 @@
             <div class="relative bg-brand-ivory/95 backdrop-blur-xl text-brand-dark rounded-[2rem] p-5 sm:p-6 border border-brand-orange/30 shadow-2xl">
               <div class="flex items-center justify-between gap-2 mb-4">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-orange text-white text-xs font-extrabold">
-                  🔥 المحصول الأشهر في المتجر
+                  <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.5 3 5.5 3 9a5 5 0 1 1-10 0c0-2.2 1.2-4.2 3-5.5C8.5 7.5 10 9 10 9s-.5-4 2-7z"/></svg> المحصول الأشهر في المتجر
                 </span>
                 <span class="text-xs font-bold text-brand-terracotta bg-brand-peach/25 px-2.5 py-1 rounded-lg">
                   متوفر للشحن الفوري
                 </span>
               </div>
 
-              <div class="relative rounded-2xl overflow-hidden bg-brand-cream aspect-[16/11] mb-4 border border-brand-border group">
-                <img
-                  src="assets/guji-bag-orange.jpg"
-                  alt="محصول أثيوبيا قوجي كافيين سيب"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div class="absolute bottom-3 right-3 bg-brand-dark/85 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1 rounded-lg">
-                  ارتفاع 2100م • مجففة • 250 جم
+              <!-- Hero Media Slider: صورة الكيس -> فيديو التحضير -->
+              <div id="hero-media-slider" class="relative rounded-2xl overflow-hidden bg-brand-cream aspect-[16/11] mb-4 border border-brand-border">
+                <!-- Slide 1: صورة الكيس -->
+                <div class="hero-media-slide absolute inset-0 transition-all duration-700 ease-out" style="transform: translateX(0%); opacity: 1;">
+                  <img
+                    src="assets/guji-bag-orange.jpg"
+                    alt="محصول أثيوبيا قوجي كافيين سيب"
+                    class="w-full h-full object-cover"
+                  />
+                  <div class="absolute bottom-3 right-3 bg-brand-dark/85 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1 rounded-lg">
+                    ارتفاع 2100م • مجففة • 250 جم
+                  </div>
                 </div>
+                
+                <!-- Slide 2: فيديو التحضير -->
+                <div class="hero-media-slide absolute inset-0 transition-all duration-700 ease-out" style="transform: translateX(100%); opacity: 0;">
+                  <video 
+                    class="w-full h-full object-cover" 
+                    autoplay muted loop playsinline
+                    poster="assets/guji-bag-orange.jpg"
+                  >
+                    <source src="https://assets.mixkit.co/videos/236/236-720.mp4" type="video/mp4" />
+                  </video>
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d]/60 via-transparent to-transparent"></div>
+                  <div class="absolute bottom-3 right-3 bg-brand-orange/90 text-white text-[11px] font-bold px-3 py-1 rounded-lg">
+                    شاهد تحضير قوجي بالفلتر ▶
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slider Indicators -->
+              <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                <button type="button" class="hero-slide-dot w-2.5 h-2.5 rounded-full bg-brand-orange transition-all cursor-pointer" data-slide="0" aria-label="الصورة"></button>
+                <button type="button" class="hero-slide-dot w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white transition-all cursor-pointer" data-slide="1" aria-label="الفيديو"></button>
               </div>
 
               <div class="space-y-3">
@@ -275,11 +351,9 @@
                   </div>
                 </div>
 
-                <!-- Instant Grind Selector -->
-                <div class="grid grid-cols-3 gap-2 text-xs">
+                <!-- Grind Selector - حبوب كاملة فقط -->
+                <div class="grid grid-cols-1 text-xs">
                   <button type="button" onclick="selectHeroGrind(this, 'حبوب كاملة')" class="hero-grind-btn py-2 rounded-xl border-2 border-brand-orange bg-brand-orange/10 text-brand-terracotta font-bold cursor-pointer">حبوب كاملة</button>
-                  <button type="button" onclick="selectHeroGrind(this, 'طحن فلتر V60')" class="hero-grind-btn py-2 rounded-xl border border-brand-border bg-white text-brand-charcoal font-semibold hover:border-brand-orange cursor-pointer">فلتر V60</button>
-                  <button type="button" onclick="selectHeroGrind(this, 'طحن إسبريسو')" class="hero-grind-btn py-2 rounded-xl border border-brand-border bg-white text-brand-charcoal font-semibold hover:border-brand-orange cursor-pointer">إسبريسو</button>
                 </div>
 
                 <button
@@ -300,22 +374,22 @@
     <div class="bg-brand-orange text-white py-3.5 overflow-hidden border-y border-brand-terracotta/30">
       <div class="animate-marquee-slow gap-8 text-sm sm:text-base font-extrabold tracking-wide whitespace-nowrap">
         <div class="flex items-center gap-8 px-4">
-          <span>✦ CAFFEINE SIP ROASTERY</span>
-          <span>✦ أثيوبيا قوجي</span>
-          <span>✦ كولمبيا عنب</span>
-          <span>✦ البرازيل كندر ويفر</span>
-          <span>✦ بوكس اثيوبيات 129 ر.س</span>
-          <span>✦ بوكس كلاسيك 99 ر.س</span>
-          <span>✦ أدوات باريستا احترافية</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> CAFFEINE SIP ROASTERY</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> أثيوبيا قوجي</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> كولمبيا عنب</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> البرازيل كندر ويفر</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> بوكس اثيوبيات 129 ر.س</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> بوكس كلاسيك 99 ر.س</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> أدوات باريستا احترافية</span>
         </div>
         <div class="flex items-center gap-8 px-4" aria-hidden="true">
-          <span>✦ CAFFEINE SIP ROASTERY</span>
-          <span>✦ أثيوبيا قوجي</span>
-          <span>✦ كولمبيا عنب</span>
-          <span>✦ البرازيل كندر ويفر</span>
-          <span>✦ بوكس اثيوبيات 129 ر.س</span>
-          <span>✦ بوكس كلاسيك 99 ر.س</span>
-          <span>✦ أدوات باريستا احترافية</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> CAFFEINE SIP ROASTERY</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> أثيوبيا قوجي</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> كولمبيا عنب</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> البرازيل كندر ويفر</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> بوكس اثيوبيات 129 ر.س</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> بوكس كلاسيك 99 ر.س</span>
+          <span><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg> أدوات باريستا احترافية</span>
         </div>
       </div>
     </div>
@@ -341,65 +415,67 @@
         <!-- A. Interactive Auto-Playing Animated Banner Slider (بنر متحرك تفاعلي) -->
         <div class="relative rounded-[2rem] overflow-hidden border border-brand-border shadow-elevated bg-brand-dark min-h-[360px] sm:min-h-[420px]">
           <div id="promo-slider" class="relative w-full h-full">
-            <!-- Slide 1: بوكس اثيوبيات -->
-            <div class="promo-slide grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#1c120d] via-[#2b150c] to-[#9a3b12]">
-              <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white">
-                <span class="inline-block px-3.5 py-1 rounded-full bg-brand-orange text-white text-xs font-extrabold">🔥 وفر 56 ر.س • خصم 30%</span>
-                <h3 class="text-2xl sm:text-4xl font-black leading-tight">بوكس اثيوبيات — ثلاث تجارب استثنائية</h3>
-                <p class="text-sm sm:text-base text-brand-ivory/80 leading-relaxed">
-                  ثلاث تجارب من أعماق المحاصيل الإثيوبية المختارة بعناية، تمنحك تنوعاً فاكهياً وعطرياً مذهلاً بسعر خاص.
-                </p>
-                <div class="flex flex-wrap items-center gap-4 pt-1">
-                  <button type="button" onclick="quickBuyProduct('448705895')" class="px-7 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer">
-                    اطلب بوكس اثيوبيات — 129 ر.س
-                  </button>
-                  <span class="text-sm text-brand-peach line-through font-semibold">بدلاً من 185 ر.س</span>
+            <div class="promo-slider-track h-full" id="promo-slider-track">
+              <!-- Slide 1: بوكس اثيوبيات -->
+              <div class="promo-slide active grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#1c120d] via-[#2b150c] to-[#9a3b12]">
+                <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white slide-content">
+                  <span class="slide-badge inline-block px-3.5 py-1 rounded-full bg-brand-orange text-white text-xs font-extrabold"><span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.5 3 5.5 3 9a5 5 0 1 1-10 0c0-2.2 1.2-4.2 3-5.5C8.5 7.5 10 9 10 9s-.5-4 2-7z"/></svg> وفر 56 ر.س</span> • خصم 30%</span>
+                  <h3 class="slide-title text-2xl sm:text-4xl font-black leading-tight">بوكس اثيوبيات — ثلاث تجارب استثنائية</h3>
+                  <p class="slide-desc text-sm sm:text-base text-brand-ivory/80 leading-relaxed">
+                    ثلاث تجارب من أعماق المحاصيل الإثيوبية المختارة بعناية، تمنحك تنوعاً فاكهياً وعطرياً مذهلاً بسعر خاص.
+                  </p>
+                  <div class="slide-cta flex flex-wrap items-center gap-4 pt-1">
+                    <button type="button" onclick="quickBuyProduct('448705895')" class="px-7 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer">
+                      اطلب بوكس اثيوبيات — 129 ر.س
+                    </button>
+                    <span class="slide-price text-sm text-brand-peach line-through font-semibold">بدلاً من 185 ر.س</span>
+                  </div>
+                </div>
+                <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream">
+                  <img src="https://cdn.files.salla.network/products/1916802350/bea46442-2d24-4b1c-94c6-1c90413d5353-original.jpeg" alt="بوكس اثيوبيات كافيين سيب" class="slide-img w-full h-full object-cover" />
                 </div>
               </div>
-              <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream">
-                <img src="https://cdn.files.salla.network/products/1916802350/bea46442-2d24-4b1c-94c6-1c90413d5353-original.jpeg" alt="بوكس اثيوبيات كافيين سيب" class="w-full h-full object-cover" />
-              </div>
-            </div>
 
-            <!-- Slide 2: بوكس كلاسيك -->
-            <div class="promo-slide hidden grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#2b150c] via-[#454545] to-[#1c120d]">
-              <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white">
-                <span class="inline-block px-3.5 py-1 rounded-full bg-brand-peach text-brand-dark text-xs font-extrabold">☕ خصم 34% • وفر 52 ر.س</span>
-                <h3 class="text-2xl sm:text-4xl font-black leading-tight">بوكس كلاسيك — لعشاق النكهات المتوازنة</h3>
-                <p class="text-sm sm:text-base text-brand-ivory/80 leading-relaxed">
-                  ثلاث تجارب لعشاق المحاصيل الكلاسيكية بحلاوة عالية وقوام ممتلئ — مثالي للإسبريسو ومشروبات الحليب اليومية.
-                </p>
-                <div class="flex flex-wrap items-center gap-4 pt-1">
-                  <button type="button" onclick="quickBuyProduct('1715765012')" class="px-7 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer">
-                    اطلب بوكس كلاسيك — 99 ر.س
-                  </button>
-                  <span class="text-sm text-brand-peach line-through font-semibold">بدلاً من 151 ر.س</span>
+              <!-- Slide 2: بوكس كلاسيك -->
+              <div class="promo-slide grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#2b150c] via-[#454545] to-[#1c120d]">
+                <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white slide-content">
+                  <span class="slide-badge inline-block px-3.5 py-1 rounded-full bg-brand-peach text-brand-dark text-xs font-extrabold"><span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg> خصم 34%</span> • وفر 52 ر.س</span>
+                  <h3 class="slide-title text-2xl sm:text-4xl font-black leading-tight">بوكس كلاسيك — لعشاق النكهات المتوازنة</h3>
+                  <p class="slide-desc text-sm sm:text-base text-brand-ivory/80 leading-relaxed">
+                    ثلاث تجارب لعشاق المحاصيل الكلاسيكية بحلاوة عالية وقوام ممتلئ — مثالي للإسبريسو ومشروبات الحليب اليومية.
+                  </p>
+                  <div class="slide-cta flex flex-wrap items-center gap-4 pt-1">
+                    <button type="button" onclick="quickBuyProduct('1715765012')" class="px-7 py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer">
+                      اطلب بوكس كلاسيك — 99 ر.س
+                    </button>
+                    <span class="slide-price text-sm text-brand-peach line-through font-semibold">بدلاً من 151 ر.س</span>
+                  </div>
+                </div>
+                <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream">
+                  <img src="https://cdn.files.salla.network/products/1916802350/98189e41-3f01-404a-9a63-13a0fc0783f0-original.webp" alt="بوكس كلاسيك كافيين سيب" class="slide-img w-full h-full object-cover" />
                 </div>
               </div>
-              <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream">
-                <img src="https://cdn.files.salla.network/products/1916802350/98189e41-3f01-404a-9a63-13a0fc0783f0-original.webp" alt="بوكس كلاسيك كافيين سيب" class="w-full h-full object-cover" />
-              </div>
-            </div>
 
-            <!-- Slide 3: أدوات الباريستا الذكية -->
-            <div class="promo-slide hidden grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#9a3b12] via-[#c74f12] to-[#f0660c]">
-              <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white">
-                <span class="inline-block px-3.5 py-1 rounded-full bg-brand-dark text-white text-xs font-extrabold">⚙️ أدوات الباريستا الذكية • خصومات فورية</span>
-                <h3 class="text-2xl sm:text-4xl font-black leading-tight">ميزان النانو الذكي + دوزنق كاب الرقمي</h3>
-                <p class="text-sm sm:text-base text-white/90 leading-relaxed">
-                  اضبط جرعتك ووقت الاستخلاص بدقة احترافية بدون فوضى — بخصومات تصل إلى 31 ر.س على أدوات التحضير الذكية.
-                </p>
-                <div class="flex flex-wrap items-center gap-4 pt-1">
-                  <button type="button" onclick="quickBuyProduct('1475126343')" class="px-7 py-3.5 rounded-xl bg-brand-dark hover:bg-black text-white font-extrabold text-sm transition-all cursor-pointer">
-                    ميزان النانو — 99 ر.س
-                  </button>
-                  <button type="button" onclick="quickBuyProduct('1618652840')" class="px-5 py-3.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-sm transition-all cursor-pointer">
-                    دوزنق كاب — 89 ر.س
-                  </button>
+              <!-- Slide 3: أدوات الباريستا الذكية -->
+              <div class="promo-slide grid lg:grid-cols-12 items-center min-h-[360px] sm:min-h-[420px] bg-gradient-to-l from-[#9a3b12] via-[#c74f12] to-[#f0660c]">
+                <div class="lg:col-span-6 p-7 sm:p-12 space-y-5 text-white slide-content">
+                  <span class="slide-badge inline-block px-3.5 py-1 rounded-full bg-brand-dark text-white text-xs font-extrabold"><span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.77 1 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> أدوات الباريستا الذكية</span> • خصومات فورية</span>
+                  <h3 class="slide-title text-2xl sm:text-4xl font-black leading-tight">ميزان النانو الذكي + دوزنق كاب الرقمي</h3>
+                  <p class="slide-desc text-sm sm:text-base text-white/90 leading-relaxed">
+                    اضبط جرعتك ووقت الاستخلاص بدقة احترافية بدون فوضى — بخصومات تصل إلى 31 ر.س على أدوات التحضير الذكية.
+                  </p>
+                  <div class="slide-cta flex flex-wrap items-center gap-4 pt-1">
+                    <button type="button" onclick="quickBuyProduct('1475126343')" class="px-7 py-3.5 rounded-xl bg-brand-dark hover:bg-black text-white font-extrabold text-sm transition-all cursor-pointer">
+                      ميزان النانو — 99 ر.س
+                    </button>
+                    <button type="button" onclick="quickBuyProduct('1618652840')" class="px-5 py-3.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-sm transition-all cursor-pointer">
+                      دوزنق كاب — 89 ر.س
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream">
-                <img src="https://cdn.files.salla.network/products/1916802350/c33e116b-7b07-48da-94d6-add0633bdf6f-original.jpeg" alt="ميزان القهوة الذكي النانو" class="w-full h-full object-cover" />
+                <div class="lg:col-span-6 h-64 sm:h-80 lg:h-[420px] relative overflow-hidden bg-brand-cream">
+                  <img src="https://cdn.files.salla.network/products/1916802350/c33e116b-7b07-48da-94d6-add0633bdf6f-original.jpeg" alt="ميزان القهوة الذكي النانو" class="slide-img w-full h-full object-cover" />
+                </div>
               </div>
             </div>
           </div>
@@ -432,7 +508,7 @@
             <div class="absolute inset-0 brand-pattern-bg opacity-15"></div>
             <div class="relative z-10 space-y-3 max-w-lg">
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-brand-dark/50 text-brand-peach text-xs font-extrabold border border-white/15">
-                🍇 إصدار خاص ومميز
+                <svg class="w-4 h-4 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 4c2-2 5-2 6 0"/><circle cx="9" cy="10" r="2.5"/><circle cx="15" cy="10" r="2.5"/><circle cx="12" cy="14" r="2.5"/><circle cx="8" cy="15" r="2"/><circle cx="16" cy="15" r="2"/><circle cx="12" cy="19" r="2.2"/></svg> إصدار خاص ومميز
               </div>
               <h3 class="text-xl sm:text-3xl font-black leading-snug">كولمبيا عنب — تجربة فاكهية استثنائية!</h3>
               <p class="text-sm text-brand-ivory/85 leading-relaxed">
@@ -456,26 +532,22 @@
             <h2 class="text-2xl sm:text-4xl font-black text-white mt-1">عيش لحظة التحضير — فيديو حقيقي بجودة HD</h2>
           </div>
           <p class="text-sm text-brand-ivory/70 max-w-md">
-            شاهد لحظة الكبس والصب والاستخلاص واضغط على أي فيديو لتكبيره أو أضف المنتج مباشرة لسلتك.
+            اضغط على أي فيديو لتشغيله كاملاً أو أضف المنتج مباشرة لسلتك.
           </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Video Card 1 -->
           <div class="group relative rounded-3xl overflow-hidden bg-black border border-white/10 shadow-2xl">
-            <div class="relative aspect-[4/5] overflow-hidden">
+            <div class="relative aspect-[4/5] overflow-hidden cursor-pointer" onclick="openVideoModal('https://assets.mixkit.co/videos/3572/3572-720.mp4', 'كبس وتحضير الإسبريسو بدقة احترافية')">
               <video class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" autoplay muted loop playsinline poster="assets/guji-bag-dark.jpg">
                 <source src="https://assets.mixkit.co/videos/3572/3572-720.mp4" type="video/mp4" />
               </video>
               <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-[#1c120d]/25 to-transparent"></div>
-              <button type="button" onclick="openVideoModal('https://assets.mixkit.co/videos/3572/3572-720.mp4', 'كبس وتحضير الإسبريسو بدقة احترافية')" aria-label="تكبير الفيديو" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-brand-orange transition-colors cursor-pointer">
-                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </button>
-              <span class="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-brand-orange/90 text-white text-[11px] font-extrabold">HD • أدوات الباريستا</span>
               <div class="absolute bottom-0 inset-x-0 p-5 space-y-2.5">
                 <h3 class="text-lg font-extrabold text-white">دقة الاستخلاص بلا عناء</h3>
                 <p class="text-xs text-brand-ivory/80">ارفع دقة استخلاصك مع ميزان النانو الذكي وبخاخ RDT.</p>
-                <button type="button" onclick="addToCart('1475126343')" class="w-full py-2.5 rounded-xl bg-white/15 hover:bg-brand-orange backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-colors cursor-pointer">
+                <button type="button" onclick="event.stopPropagation(); addToCart('1475126343')" class="w-full py-2.5 rounded-xl bg-white/15 hover:bg-brand-orange backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-colors cursor-pointer">
                   أضف ميزان النانو — 99 ر.س
                 </button>
               </div>
@@ -484,19 +556,15 @@
 
           <!-- Video Card 2 -->
           <div class="group relative rounded-3xl overflow-hidden bg-black border border-brand-orange/40 shadow-2xl">
-            <div class="relative aspect-[4/5] overflow-hidden">
+            <div class="relative aspect-[4/5] overflow-hidden cursor-pointer" onclick="openVideoModal('https://assets.mixkit.co/videos/236/236-720.mp4', 'ترشيح أثيوبيا قوجي — وضوح الفواكه والتوت')">
               <video class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" autoplay muted loop playsinline poster="assets/guji-bag-orange.jpg">
                 <source src="https://assets.mixkit.co/videos/236/236-720.mp4" type="video/mp4" />
               </video>
               <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-[#1c120d]/25 to-transparent"></div>
-              <button type="button" onclick="openVideoModal('https://assets.mixkit.co/videos/236/236-720.mp4', 'ترشيح أثيوبيا قوجي — وضوح الفواكه والتوت')" aria-label="تكبير الفيديو" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-brand-orange transition-colors cursor-pointer">
-                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </button>
-              <span class="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-brand-orange text-white text-[11px] font-extrabold">HD • أثيوبيا قوجي</span>
               <div class="absolute bottom-0 inset-x-0 p-5 space-y-2.5">
                 <h3 class="text-lg font-extrabold text-white">وضوح الإيحاءات في كل صبّة</h3>
                 <p class="text-xs text-brand-ivory/80">فواكه مجففة وتوت وزبيب في محصول أثيوبيا قوجي.</p>
-                <button type="button" onclick="addToCart('214325586', 'طحن فلتر V60')" class="w-full py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white text-xs font-extrabold transition-colors cursor-pointer shadow-glow">
+                <button type="button" onclick="event.stopPropagation(); addToCart('214325586', 'حبوب كاملة (250g)')" class="w-full py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white text-xs font-extrabold transition-colors cursor-pointer shadow-glow">
                   أضف أثيوبيا قوجي — 60 ر.س
                 </button>
               </div>
@@ -505,19 +573,15 @@
 
           <!-- Video Card 3 -->
           <div class="group relative rounded-3xl overflow-hidden bg-black border border-white/10 shadow-2xl">
-            <div class="relative aspect-[4/5] overflow-hidden">
+            <div class="relative aspect-[4/5] overflow-hidden cursor-pointer" onclick="openVideoModal('https://assets.mixkit.co/videos/41858/41858-720.mp4', 'مشروبات الحليب مع البرازيل كندر ويفر')">
               <video class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" autoplay muted loop playsinline poster="assets/cups-floating.jpg">
                 <source src="https://assets.mixkit.co/videos/41858/41858-720.mp4" type="video/mp4" />
               </video>
               <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d] via-[#1c120d]/25 to-transparent"></div>
-              <button type="button" onclick="openVideoModal('https://assets.mixkit.co/videos/41858/41858-720.mp4', 'مشروبات الحليب مع البرازيل كندر ويفر')" aria-label="تكبير الفيديو" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-brand-orange transition-colors cursor-pointer">
-                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </button>
-              <span class="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-brand-terracotta text-white text-[11px] font-extrabold">HD • مشروبات الحليب</span>
               <div class="absolute bottom-0 inset-x-0 p-5 space-y-2.5">
                 <h3 class="text-lg font-extrabold text-white">توازن ساحر مع الحليب</h3>
                 <p class="text-xs text-brand-ivory/80">جرّب البرازيل كندر ويفر 250g لنكهة شوكولاتة غنية.</p>
-                <button type="button" onclick="addToCart('190606224', 'طحن إسبريسو')" class="w-full py-2.5 rounded-xl bg-white/15 hover:bg-brand-orange backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-colors cursor-pointer">
+                <button type="button" onclick="event.stopPropagation(); addToCart('190606224', 'حبوب كاملة (250g)')" class="w-full py-2.5 rounded-xl bg-white/15 hover:bg-brand-orange backdrop-blur-md text-white text-xs font-bold border border-white/20 transition-colors cursor-pointer">
                   أضف البرازيل كندر ويفر — 59 ر.س
                 </button>
               </div>
@@ -566,7 +630,7 @@
         <div class="grid lg:grid-cols-2 gap-8 items-stretch">
           <!-- Real Box 1: بوكس اثيوبيات -->
           <div class="bg-brand-ivory text-brand-dark rounded-[2rem] p-6 sm:p-8 shadow-2xl border-2 border-brand-orange flex flex-col justify-between relative">
-            <span class="absolute -top-3.5 right-6 bg-brand-orange text-white text-xs font-black px-4 py-1 rounded-full shadow-lg">🔥 الأكثر مبيعاً • وفر 56 ر.س</span>
+            <span class="absolute -top-3.5 right-6 bg-brand-orange text-white text-xs font-black px-4 py-1 rounded-full shadow-lg"><span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.5 3 5.5 3 9a5 5 0 1 1-10 0c0-2.2 1.2-4.2 3-5.5C8.5 7.5 10 9 10 9s-.5-4 2-7z"/></svg> الأكثر مبيعاً • وفر 56 ر.س</span></span>
             <div>
               <div class="rounded-2xl overflow-hidden aspect-[16/10] bg-brand-cream mb-5 border border-brand-border">
                 <img src="https://cdn.files.salla.network/products/1916802350/bea46442-2d24-4b1c-94c6-1c90413d5353-original.jpeg" alt="بوكس اثيوبيات" class="w-full h-full object-cover" />
@@ -574,9 +638,9 @@
               <h3 class="text-2xl font-black text-brand-dark">بوكس اثيوبيات</h3>
               <p class="text-sm text-brand-charcoal mt-1.5">ثلاث تجارب من أعماق المحاصيل الإثيوبية المختارة بعناية، لعشاق الفاكهية والترشيح اليدوي V60.</p>
               <ul class="mt-4 space-y-2 text-xs sm:text-sm font-semibold text-brand-dark bg-brand-cream p-4 rounded-2xl border border-brand-border">
-                <li>✓ 3 محاصيل إثيوبية مختصة بتحميص طازج</li>
-                <li>✓ مثالي للترشيح V60 والقهوة المقطرة والباردة</li>
-                <li>✓ خصم فوري 30% بدلاً من شراء كل محصول منفرداً</li>
+                <li class="flex items-center gap-2"><span class="text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>3 محاصيل إثيوبية مختصة بتحميص طازج</span></li>
+                <li class="flex items-center gap-2"><span class="text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>مثالي للترشيح V60 والقهوة المقطرة والباردة</span></li>
+                <li class="flex items-center gap-2"><span class="text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>خصم فوري 30% بدلاً من شراء كل محصول منفرداً</span></li>
               </ul>
             </div>
             <div class="pt-6 flex items-center justify-between gap-4">
@@ -585,14 +649,14 @@
                 <span class="text-3xl font-black text-brand-orange">129 <span class="text-xs font-bold text-brand-dark">ر.س</span></span>
               </div>
               <button type="button" onclick="quickBuyProduct('448705895')" class="cta-pulse flex-1 py-3.5 px-5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-black text-sm shadow-glow transition-all cursor-pointer">
-                اطلب بوكس اثيوبيات الآن ⚡
+                <span class="inline-flex items-center justify-center gap-1.5">اطلب بوكس اثيوبيات الآن <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
               </button>
             </div>
           </div>
 
           <!-- Real Box 2: بوكس كلاسيك -->
           <div class="bg-brand-ivory text-brand-dark rounded-[2rem] p-6 sm:p-8 shadow-2xl border border-brand-border flex flex-col justify-between relative">
-            <span class="absolute -top-3.5 right-6 bg-brand-dark text-white text-xs font-black px-4 py-1 rounded-full shadow-lg">☕ خصم 34% • وفر 52 ر.س</span>
+            <span class="absolute -top-3.5 right-6 bg-brand-dark text-white text-xs font-black px-4 py-1 rounded-full shadow-lg"><span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg> خصم 34%</span> • وفر 52 ر.س</span>
             <div>
               <div class="rounded-2xl overflow-hidden aspect-[16/10] bg-brand-cream mb-5 border border-brand-border">
                 <img src="https://cdn.files.salla.network/products/1916802350/98189e41-3f01-404a-9a63-13a0fc0783f0-original.webp" alt="بوكس كلاسيك" class="w-full h-full object-cover" />
@@ -600,9 +664,9 @@
               <h3 class="text-2xl font-black text-brand-dark">بوكس كلاسيك</h3>
               <p class="text-sm text-brand-charcoal mt-1.5">ثلاث تجارب لعشاق المحاصيل الكلاسيكية المتوازنة، مثالي للإسبريسو ومشروبات الحليب اليومية.</p>
               <ul class="mt-4 space-y-2 text-xs sm:text-sm font-semibold text-brand-dark bg-brand-cream p-4 rounded-2xl border border-brand-border">
-                <li>✓ 3 محاصيل كلاسيكية بقوام ممتلئ وحلاوة عالية</li>
-                <li>✓ مثالي للإسبريسو، اللاتيه، والفلات وايت</li>
-                <li>✓ أقل من 33 ر.س للمحصول الواحد!</li>
+                <li class="flex items-center gap-2"><span class="text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>3 محاصيل كلاسيكية بقوام ممتلئ وحلاوة عالية</span></li>
+                <li class="flex items-center gap-2"><span class="text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>مثالي للإسبريسو، اللاتيه، والفلات وايت</li>
+                <li class="flex items-center gap-2"><span class="text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>أقل من 33 ر.س للمحصول الواحد!</span></li>
               </ul>
             </div>
             <div class="pt-6 flex items-center justify-between gap-4">
@@ -611,7 +675,7 @@
                 <span class="text-3xl font-black text-brand-dark">99 <span class="text-xs font-bold text-brand-charcoal">ر.س</span></span>
               </div>
               <button type="button" onclick="quickBuyProduct('1715765012')" class="flex-1 py-3.5 px-5 rounded-xl bg-brand-dark hover:bg-brand-orange text-white font-black text-sm transition-all cursor-pointer">
-                اطلب بوكس كلاسيك الآن ⚡
+                <span class="inline-flex items-center justify-center gap-1.5">اطلب بوكس كلاسيك الآن <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
               </button>
             </div>
           </div>
@@ -630,7 +694,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="bg-white rounded-3xl p-6 border border-brand-border shadow-sm space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-brand-orange text-lg">★★★★★</span>
+              <span class="inline-flex items-center gap-0.5 text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg></span>
               <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-brand-cream text-brand-terracotta">اشترى: بوكس اثيوبيات</span>
             </div>
             <p class="text-sm text-brand-charcoal leading-relaxed">
@@ -638,13 +702,13 @@
             </p>
             <div class="pt-3 border-t border-brand-border flex items-center justify-between text-xs">
               <strong class="text-brand-dark">خالد العتيبي</strong>
-              <span class="text-brand-charcoal/70">الرياض • عميل موثق ✓</span>
+              <span class="text-brand-charcoal/70">الرياض • <span class="inline-flex items-center gap-1">عميل موثق <span class="text-emerald-600"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></span></span>
             </div>
           </div>
 
           <div class="bg-white rounded-3xl p-6 border border-brand-border shadow-sm space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-brand-orange text-lg">★★★★★</span>
+              <span class="inline-flex items-center gap-0.5 text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg></span>
               <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-brand-cream text-brand-terracotta">اشترى: كولمبيا عنب</span>
             </div>
             <p class="text-sm text-brand-charcoal leading-relaxed">
@@ -652,13 +716,13 @@
             </p>
             <div class="pt-3 border-t border-brand-border flex items-center justify-between text-xs">
               <strong class="text-brand-dark">نورة الشمري</strong>
-              <span class="text-brand-charcoal/70">جدة • عميل موثق ✓</span>
+              <span class="text-brand-charcoal/70">جدة • <span class="inline-flex items-center gap-1">عميل موثق <span class="text-emerald-600"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></span></span>
             </div>
           </div>
 
           <div class="bg-white rounded-3xl p-6 border border-brand-border shadow-sm space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-brand-orange text-lg">★★★★★</span>
+              <span class="inline-flex items-center gap-0.5 text-brand-orange"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg></span>
               <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-brand-cream text-brand-terracotta">اشترى: ميزان النانو + دوزنق كاب</span>
             </div>
             <p class="text-sm text-brand-charcoal leading-relaxed">
@@ -666,7 +730,7 @@
             </p>
             <div class="pt-3 border-t border-brand-border flex items-center justify-between text-xs">
               <strong class="text-brand-dark">طارق الغامدي</strong>
-              <span class="text-brand-charcoal/70">الدمام • عميل موثق ✓</span>
+              <span class="text-brand-charcoal/70">الدمام • <span class="inline-flex items-center gap-1">عميل موثق <span class="text-emerald-600"><svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></span></span>
             </div>
           </div>
         </div>
@@ -737,7 +801,7 @@
       <div class="text-base font-black">129 ر.س <span class="text-xs font-normal line-through text-white/50">185</span></div>
     </div>
     <button type="button" onclick="quickBuyProduct('448705895')" class="flex-1 py-3 rounded-xl bg-brand-orange text-white font-extrabold text-sm shadow-glow">
-      اطلب الآن ⚡
+      <span class="inline-flex items-center justify-center gap-1">اطلب الآن <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
     </button>
   </div>
 
@@ -746,7 +810,7 @@
     <div class="relative w-full max-w-4xl bg-brand-dark rounded-3xl overflow-hidden border border-white/15 shadow-2xl">
       <div class="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
         <h3 id="video-modal-title" class="text-sm sm:text-base font-bold text-white"></h3>
-        <button type="button" onclick="closeVideoModal()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-brand-orange text-white flex items-center justify-center cursor-pointer">✕</button>
+        <button type="button" onclick="closeVideoModal()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-brand-orange text-white flex items-center justify-center cursor-pointer"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="bg-black aspect-video">
         <video id="modal-video-player" class="w-full h-full object-contain" controls autoplay playsinline></video>
@@ -762,7 +826,7 @@
           <h3 class="text-lg font-extrabold text-brand-dark">سلة مشترياتك</h3>
           <span id="drawer-count" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-orange/15 text-brand-orange">0</span>
         </div>
-        <button type="button" onclick="closeCart()" class="w-9 h-9 rounded-xl border border-brand-border hover:bg-brand-cream flex items-center justify-center font-bold cursor-pointer">✕</button>
+        <button type="button" onclick="closeCart()" class="w-9 h-9 rounded-xl border border-brand-border hover:bg-brand-cream flex items-center justify-center font-bold cursor-pointer"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
 
       <div class="px-6 py-3 bg-brand-cream border-b border-brand-border text-xs">
@@ -813,7 +877,7 @@
           onclick="completeOrder()"
           class="w-full py-3.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm shadow-glow transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          تأكيد الطلب السريع الآن ⚡
+          <span class="inline-flex items-center justify-center gap-1.5">تأكيد الطلب السريع الآن <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
         </button>
       </div>
     </div>
@@ -860,7 +924,7 @@
         id: '214325586',
         name: 'أثيوبيا قوجي',
         cat: '250g',
-        badge: 'الأكثر مبيعاً 🔥',
+        badge: 'الأكثر مبيعاً',
         image: 'https://cdn.files.salla.network/products/1916802350/6b60f884-53e6-4899-99c2-dd99d975ed86-original.jpeg',
         meta: 'محاصيل 250g • إثيوبيا • مجففة • 2100م',
         notes: 'فواكه مجففة، توت، زبيب، حلاوة وقوام ممتلئ.',
@@ -873,7 +937,7 @@
         id: '786827294',
         name: 'كولمبيا عنب',
         cat: '250g',
-        badge: 'تجربة استثنائية 🍇',
+        badge: 'إصدار خاص',
         image: 'https://cdn.files.salla.network/products/1916802350/8c5bc275-c478-48c4-8d2f-eaffa773f413-original.jpeg',
         meta: 'محاصيل 250g • كولومبيا • إصدار خاص',
         notes: 'محصول فاخر بإيحاءات العنب الواضحة والحلاوة المميزة.',
@@ -1034,14 +1098,26 @@
     let cart = [];
     let discountPct = 0;
 
-    // 1. Promo Slider Auto-Play
+    // 1. Promo Slider Auto-Play - Simple Transform Based
     let slideIdx = 0;
     const slides = document.querySelectorAll('.promo-slide');
     const dots = document.querySelectorAll('.slider-dot');
+    const track = document.getElementById('promo-slider-track');
 
     function showSlide(n) {
       slideIdx = (n + slides.length) % slides.length;
-      slides.forEach((s, i) => s.classList.toggle('hidden', i !== slideIdx));
+      
+      // Move track with transform
+      if (track) {
+        track.style.transform = `translateX(-${slideIdx * (100 / slides.length)}%)`;
+      }
+      
+      // Update active class for content animations
+      slides.forEach((s, i) => {
+        s.classList.toggle('active', i === slideIdx);
+      });
+      
+      // Update dots
       dots.forEach((d, i) => {
         d.className = i === slideIdx
           ? 'slider-dot h-2.5 w-8 rounded-full bg-brand-orange transition-all cursor-pointer'
@@ -1051,7 +1127,19 @@
     function nextSlide() { showSlide(slideIdx + 1); }
     function prevSlide() { showSlide(slideIdx - 1); }
     function goToSlide(n) { showSlide(n); }
-    setInterval(nextSlide, 5500);
+    
+    // Auto-play with persistent interval reference
+    window.promoSliderAutoPlay = setInterval(() => {
+      try {
+        console.log('[Slider] Auto-play tick, slideIdx:', slideIdx);
+        nextSlide();
+      } catch (e) {
+        console.error('[Slider] Auto-play error:', e);
+      }
+    }, 6000);
+    
+    // Expose for manual control
+    window.promoSlider = { nextSlide, prevSlide, goToSlide, showSlide, getSlideIdx: () => slideIdx };
 
     // 2. Live Countdown Timer
     let remainingSec = 3 * 3600 + 44 * 60 + 59;
@@ -1077,6 +1165,40 @@
       openCart();
     }
 
+    // 3b. Hero Media Slider (صورة <-> فيديو)
+    let heroSlideIdx = 0;
+    const heroSlides = document.querySelectorAll('.hero-media-slide');
+    const heroDots = document.querySelectorAll('.hero-slide-dot');
+    
+    function showHeroSlide(n) {
+      heroSlideIdx = (n + heroSlides.length) % heroSlides.length;
+      heroSlides.forEach((s, i) => {
+        if (i === heroSlideIdx) {
+          s.style.transform = 'translateX(0%)';
+          s.style.opacity = '1';
+        } else if (i < heroSlideIdx) {
+          s.style.transform = 'translateX(-100%)';
+          s.style.opacity = '0';
+        } else {
+          s.style.transform = 'translateX(100%)';
+          s.style.opacity = '0';
+        }
+      });
+      heroDots.forEach((d, i) => {
+        d.className = i === heroSlideIdx
+          ? 'hero-slide-dot w-2.5 h-2.5 rounded-full bg-brand-orange transition-all cursor-pointer'
+          : 'hero-slide-dot w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white transition-all cursor-pointer';
+      });
+    }
+    
+    // Auto-slide every 6 seconds
+    setInterval(() => showHeroSlide(heroSlideIdx + 1), 6000);
+    
+    // Dot click handlers
+    heroDots.forEach((dot, i) => {
+      dot.addEventListener('click', () => showHeroSlide(i));
+    });
+
     // 4. Filter Helper & Shop Grid
     function filterTo(cat) {
       currentCat = cat;
@@ -1092,7 +1214,32 @@
     function renderShop() {
       const grid = document.getElementById('shop-grid');
       const items = catalog.filter(p => currentCat === 'all' || p.cat === currentCat);
-      grid.innerHTML = items.map(p => `
+      
+      // Video banners to insert between products
+      const videoBanners = [
+        {
+          video: 'https://assets.mixkit.co/videos/3572/3572-720.mp4',
+          title: 'كبس وتحضير الإسبريسو بدقة احترافية',
+          poster: 'assets/guji-bag-dark.jpg',
+          cta: { id: '1475126343', text: 'أضف ميزان النانو — 99 ر.س' }
+        },
+        {
+          video: 'https://assets.mixkit.co/videos/236/236-720.mp4',
+          title: 'ترشيح أثيوبيا قوجي — وضوح الفواكه والتوت',
+          poster: 'assets/guji-bag-orange.jpg',
+          cta: { id: '214325586', text: 'أضف أثيوبيا قوجي — 60 ر.س' }
+        },
+        {
+          video: 'https://assets.mixkit.co/videos/41858/41858-720.mp4',
+          title: 'مشروبات الحليب مع البرازيل كندر ويفر',
+          poster: 'assets/cups-floating.jpg',
+          cta: { id: '190606224', text: 'أضف البرازيل كندر ويفر — 59 ر.س' }
+        }
+      ];
+
+      let html = '';
+      items.forEach((p, index) => {
+        html += `
         <article class="bg-white rounded-3xl border border-brand-border overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-elevated hover:border-brand-orange/50 transition-all duration-300 animate-fade-up">
           <div>
             <div class="relative aspect-[16/11] bg-brand-cream overflow-hidden group">
@@ -1134,12 +1281,40 @@
                 أضف للسلة
               </button>
               <button type="button" onclick="quickBuyFromCard('${p.id}')" class="py-2.5 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-xs shadow-sm transition-colors cursor-pointer">
-                شراء سريع ⚡
+                <span class="inline-flex items-center justify-center gap-1">شراء سريع <svg class="w-3.5 h-3.5 inline-block shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
               </button>
             </div>
           </div>
         </article>
-      `).join('');
+        `;
+
+        // Insert video banner after every 4th product (or at specific positions)
+        if ((index + 1) % 4 === 0 && index < items.length - 1) {
+          const banner = videoBanners[Math.floor(index / 4) % videoBanners.length];
+          html += `
+          <div class="col-span-full" style="grid-column: 1 / -1;">
+            <div class="relative rounded-3xl overflow-hidden bg-black border border-brand-orange/30 shadow-2xl aspect-video md:aspect-[16/5] cursor-pointer" onclick="openVideoModal('${banner.video}', '${banner.title}')">
+              <video class="w-full h-full object-cover" autoplay muted loop playsinline poster="${banner.poster}">
+                <source src="${banner.video}" type="video/mp4" />
+              </video>
+              <div class="absolute inset-0 bg-gradient-to-t from-[#1c120d]/95 via-[#1c120d]/40 to-transparent"></div>
+              <div class="absolute bottom-0 inset-x-0 p-6 sm:p-8 text-white">
+                <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-white">${banner.title}</h3>
+                  </div>
+                  <button type="button" onclick="event.stopPropagation(); addToCart('${banner.cta.id}')" class="whitespace-nowrap py-3 px-6 rounded-xl bg-brand-orange hover:bg-brand-orange-dark text-white font-extrabold text-sm transition-colors cursor-pointer shadow-glow">
+                    ${banner.cta.text}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          `;
+        }
+      });
+      
+      grid.innerHTML = html;
     }
 
     document.querySelectorAll('.shop-filter').forEach(btn => {
@@ -1189,7 +1364,7 @@
       if (code === 'SIP10') {
         discountPct = 10;
         fb.className = 'text-xs font-bold text-emerald-700';
-        fb.textContent = '✓ تم تفعيل خصم 10% بنجاح!';
+        fb.textContent = 'تم تفعيل خصم 10% بنجاح!';
       } else {
         discountPct = 0;
         fb.className = 'text-xs font-bold text-red-600';
@@ -1211,7 +1386,7 @@
       document.getElementById('drawer-count').textContent = count;
       document.getElementById('subtotal-val').textContent = `${subtotal} ر.س`;
       document.getElementById('total-val').textContent = `${total} ر.س`;
-      document.getElementById('shipping-val').textContent = count === 0 ? '—' : (shipping === 0 ? 'مجاني 🎉' : '24 ر.س');
+      document.getElementById('shipping-val').textContent = count === 0 ? '—' : (shipping === 0 ? 'مجاني' : '24 ر.س');
       document.getElementById('checkout-btn').disabled = count === 0;
 
       const discRow = document.getElementById('discount-row');
@@ -1227,14 +1402,14 @@
       const pct = Math.min(100, Math.round((afterDiscount / freeLimit) * 100));
       document.getElementById('shipping-bar').style.width = `${pct}%`;
       document.getElementById('shipping-msg').innerHTML = afterDiscount >= freeLimit
-        ? '🎉 ممتاز! طلبك مؤهل لـ <strong class="text-brand-orange">الشحن المجاني السريع</strong>'
+        ? 'ممتاز! طلبك مؤهل لـ <strong class="text-brand-orange">الشحن المجاني السريع</strong>'
         : `أضف بقيمة <strong class="text-brand-orange">${Math.max(0, freeLimit - afterDiscount)} ر.س</strong> للحصول على شحن مجاني!`;
 
       const container = document.getElementById('cart-items');
       if (cart.length === 0) {
         container.innerHTML = `
           <div class="text-center py-14 space-y-3">
-            <div class="text-4xl">☕</div>
+            <div class="w-16 h-14 mx-auto rounded-2xl bg-brand-dark p-2.5 flex items-center justify-center"><img src="assets/logo-mark.svg" alt="كافيين سيب" class="w-full h-full object-contain" /></div>
             <h4 class="font-extrabold text-brand-dark">سلتك بانتظار أول محصول!</h4>
             <p class="text-xs text-brand-charcoal">استخدم كود <strong class="text-brand-orange" dir="ltr">SIP10</strong> لخصم 10% إضافي على طلبك.</p>
           </div>
@@ -1270,7 +1445,7 @@
       renderCart();
       document.getElementById('cart-items').innerHTML = `
         <div class="text-center py-10 px-4 space-y-4 animate-fade-up">
-          <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl font-black">✓</div>
+          <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center"><svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
           <h4 class="text-xl font-black text-brand-dark">تم تأكيد طلبك التجريبي بنجاح!</h4>
           <p class="text-sm text-brand-charcoal">
             رقم الطلب: <strong dir="ltr" class="text-brand-dark">#CS-${orderNo}</strong><br/>
@@ -1330,6 +1505,7 @@
       if (e.key === 'Escape') { closeCart(); closeVideoModal(); }
     });
 
+    showSlide(0);
     renderShop();
     renderCart();
   </script>
